@@ -371,21 +371,19 @@ export function DataTable({
   const [sorting, setSorting] = React.useState<SortingState>([])
 
   // The table works in 0-based page indexes; the API is 1-based.
-  const pagination = React.useMemo(
-    () => ({ pageIndex: page - 1, pageSize }),
-    [page, pageSize],
-  )
+  // Stable identity comes from React Compiler, not a hand-written useMemo —
+  // TanStack Table and dnd-kit both care about these references.
+  const pagination = { pageIndex: page - 1, pageSize }
 
-  const handlePaginationChange = React.useCallback(
-    (updater: React.SetStateAction<typeof pagination>) => {
-      const next = typeof updater === "function" ? updater(pagination) : updater
-      onPaginationChange({
-        page: next.pageIndex + 1,
-        pageSize: next.pageSize,
-      })
-    },
-    [pagination, onPaginationChange],
-  )
+  const handlePaginationChange = (
+    updater: React.SetStateAction<typeof pagination>,
+  ) => {
+    const next = typeof updater === "function" ? updater(pagination) : updater
+    onPaginationChange({
+      page: next.pageIndex + 1,
+      pageSize: next.pageSize,
+    })
+  }
 
   const sortableId = React.useId()
   const sensors = useSensors(
@@ -394,10 +392,7 @@ export function DataTable({
     useSensor(KeyboardSensor, {}),
   )
 
-  const dataIds = React.useMemo<UniqueIdentifier[]>(
-    () => data?.map(({ id }) => id) || [],
-    [data],
-  )
+  const dataIds: UniqueIdentifier[] = data?.map(({ id }) => id) || []
 
   const table = useTable({
     features,

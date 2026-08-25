@@ -1,4 +1,9 @@
 import { z } from "zod"
+import {
+  DEFAULT_PAGINATION,
+  type PaginationParams,
+  paginatedSchema,
+} from "@/lib/pagination"
 
 /** Time windows offered by the interactive area chart. */
 export const CHART_RANGES = ["7d", "30d", "90d"] as const
@@ -50,18 +55,11 @@ export const tableRowSchema = z.object({
 
 export type TableRow = z.infer<typeof tableRowSchema>
 
-export const tableResponseSchema = z.object({
-  rows: z.array(tableRowSchema),
-  page: z.number().int().positive(),
-  pageSize: z.number().int().positive(),
-  total: z.number().int().nonnegative(),
-})
+export const tableResponseSchema = paginatedSchema(tableRowSchema)
 
 export type TableResponse = z.infer<typeof tableResponseSchema>
 
-export interface TableFilters {
-  page: number
-  pageSize: number
-}
+/** The dashboard table pages like every other list — see `lib/pagination.ts`. */
+export type TableFilters = PaginationParams
 
-export const DEFAULT_TABLE_FILTERS: TableFilters = { page: 1, pageSize: 10 }
+export const DEFAULT_TABLE_FILTERS: TableFilters = DEFAULT_PAGINATION

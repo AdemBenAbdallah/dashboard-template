@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { CommandIcon } from "lucide-react"
 import type { ComponentProps } from "react"
-import { useMemo } from "react"
 import {
   Sidebar,
   SidebarContent,
@@ -22,10 +21,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
 
   // Gating layer 2 of 3 — see the note in `nav-items.ts`. Filtering happens
   // before render, so restricted links are never in the DOM at all.
-  const items = useMemo(
-    () => NAV_ITEMS.filter((item) => hasRole(role, item.roles)),
-    [role],
-  )
+  const items = NAV_ITEMS.filter((item) => hasRole(role, item.roles))
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>

@@ -1,12 +1,4 @@
-import {
-  createContext,
-  type ReactNode,
-  use,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react"
+import { createContext, type ReactNode, use, useEffect, useState } from "react"
 
 export type Theme = "light" | "dark" | "system"
 
@@ -62,19 +54,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     root.style.colorScheme = resolvedTheme
   }, [resolvedTheme])
 
-  const setTheme = useCallback((next: Theme) => {
+  const setTheme = (next: Theme) => {
     setThemeState(next)
     try {
       window.localStorage.setItem(STORAGE_KEY, next)
     } catch {
       // Storage unavailable — the choice just won't persist.
     }
-  }, [])
+  }
 
-  const value = useMemo(
-    () => ({ theme, resolvedTheme, setTheme }),
-    [theme, resolvedTheme, setTheme],
-  )
+  // React Compiler memoizes this object, so context consumers still only
+  // re-render when `theme` or `resolvedTheme` actually change.
+  const value = { theme, resolvedTheme, setTheme }
 
   return <ThemeContext value={value}>{children}</ThemeContext>
 }

@@ -17,7 +17,14 @@ export default defineConfig({
       quoteStyle: "double",
       semicolons: false,
     }),
-    react(),
+    react({
+      // React Compiler auto-memoizes components and hooks at build time, which
+      // is what removes the need for hand-written `useMemo`/`useCallback`.
+      // React 19 on its own does NOT do this — the compiler is opt-in, and
+      // this flag is the opt-in. It runs through `oxc-transform-react`
+      // (plugin-react v6 dropped Babel in favour of oxc).
+      compiler: true,
+    }),
     tailwindcss(),
   ],
   resolve: {
