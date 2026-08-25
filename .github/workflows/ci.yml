@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch cancels the in-flight run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Every step below runs against a clean checkout — which is the point.
+      # `routeTree.gen.ts` was once gitignored, and the build failed here
+      # before it ever failed on a developer machine.
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          # Honours the `engines` field rather than pinning a second time.
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        # --frozen-lockfile fails if pnpm-lock.yaml is out of date with
+        # package.json, so a forgotten lockfile commit cannot reach main.
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        # `pnpm exec tsc --noEmit` would be a no-op: the root tsconfig is
+        # solution-style. This script runs `tsc -b --noEmit`.
+        run: pnpm run typecheck
+
+      - name: Lint and format
+        # `pnpm run ci`, not `pnpm ci` — the latter is pnpm's own install
+        # command and would shadow the script.
+        run: pnpm run ci
+
+      - name: Test
+        run: pnpm run test
+
+      - name: Build
+        run: pnpm build

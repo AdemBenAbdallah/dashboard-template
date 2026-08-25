@@ -6,8 +6,14 @@ import { HttpResponse } from "msw"
  */
 export const API_URL = import.meta.env.VITE_API_URL
 
-/** A little latency so loading states are actually visible in development. */
+/**
+ * A little latency so loading states are actually visible in development.
+ *
+ * Skipped under test, where it would only make the suite slow — assertions
+ * wait on state, not on the clock.
+ */
 export function delay(ms = 300): Promise<void> {
+  if (import.meta.env.MODE === "test") return Promise.resolve()
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 

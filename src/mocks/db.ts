@@ -168,3 +168,20 @@ export function removeAccount(id: string): boolean {
   accounts.splice(index, 1)
   return true
 }
+
+/**
+ * Restores the seed state.
+ *
+ * `accounts` and the token maps are module-level mutable state, so without
+ * this an invite or delete in one test leaks into the next and the suite
+ * becomes order-dependent. Called from the global test `afterEach`; in the
+ * browser a page reload does the same job.
+ */
+export function resetMockDb(): void {
+  accounts.length = 0
+  accounts.push(...SEED_ACCOUNTS.map((account) => ({ ...account })))
+  accessTokens.clear()
+  refreshTokens.clear()
+  revokedTokens.clear()
+  tokenCounter = 0
+}

@@ -86,6 +86,9 @@ Mock state (invites, deletions) lives in page memory and resets on reload.
 | `pnpm format`      | Biome format, writing changes                           |
 | `pnpm check`       | Biome lint + format + import sorting, writing changes   |
 | `pnpm run ci`      | Biome in CI mode — checks without writing               |
+| `pnpm run test`    | Vitest, once                                            |
+| `pnpm run test:watch` | Vitest in watch mode                                 |
+| `pnpm run test:coverage` | Vitest with a coverage report                     |
 
 ### Two script gotchas
 
@@ -96,6 +99,23 @@ Mock state (invites, deletions) lives in page memory and resets on reload.
    `tsconfig.json` is solution-style (`"files": []` plus project references), so
    a bare `tsc --noEmit` typechecks *nothing* and exits 0. The `typecheck`
    script runs `tsc -b --noEmit`, which is the real check.
+
+## Testing
+
+122 tests across three layers: pure functions, endpoint contracts, and route
+integration against the real MSW handlers.
+
+```bash
+pnpm run test
+```
+
+The methodology, conventions and the environment gotchas live in
+**[TESTING.md](./TESTING.md)** — read it before adding tests. The short version:
+test through the route with the real provider tree and the real network
+handlers, never mock axios, and reset the module singletons between tests.
+
+Adding a route? Add a row to `PROTECTED_ROUTES` in
+`src/routes/__tests__/rbac.test.tsx` and the whole role matrix covers it.
 
 ## Environment
 
@@ -117,7 +137,8 @@ Feature-based, not type-based.
 ```
 src/
   main.tsx                      # entry: starts MSW (dev), then mounts React
-  app.tsx                       # providers + session bootstrap gate
+  app.tsx                       # session bootstrap gate + router
+  app-providers.tsx             # the provider tree, shared with the tests
   router.tsx                    # router instance, context, module augmentation
   routeTree.gen.ts              # generated — committed, Biome-ignored
   index.css                     # Tailwind v4 + shadcn theme tokens
@@ -176,6 +197,8 @@ src/
     query-client.ts             # QueryClient defaults
     token-storage.ts            # the only module that knows where tokens live
     utils.ts                    # cn()
+
+  test/                         # harness: setup, MSW server, renderRoute()
 
   mocks/
     browser.ts                  # setupWorker + startMockServer

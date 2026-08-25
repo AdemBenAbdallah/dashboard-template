@@ -14,6 +14,8 @@ export default defineConfig({
       autoCodeSplitting: true,
       routesDirectory: "./src/routes",
       generatedRouteTree: "./src/routeTree.gen.ts",
+      // Test files live beside the routes they exercise; they are not routes.
+      routeFileIgnorePattern: "(\\.(test|spec)\\.[jt]sx?)|(__tests__)",
       quoteStyle: "double",
       semicolons: false,
     }),

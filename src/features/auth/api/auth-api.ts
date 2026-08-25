@@ -50,6 +50,16 @@ export function bootstrapSession(): Promise<Session | null> {
   return bootstrapPromise
 }
 
+/**
+ * Test-only escape hatch. The cached promise is what makes bootstrap
+ * single-flight for the lifetime of a page load, which is correct in the
+ * browser but means a second test could never re-run it. Never call this from
+ * application code.
+ */
+export function resetSessionBootstrapForTests(): void {
+  bootstrapPromise = null
+}
+
 async function runBootstrap(): Promise<Session | null> {
   const refreshToken = tokenStorage.getRefreshToken()
   if (!refreshToken) return null

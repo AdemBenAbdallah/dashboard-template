@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { LoginForm } from "@/features/auth/components/login-form"
-import { FALLBACK_ROUTE } from "@/features/auth/route-guards"
+import { safeRedirect } from "@/features/auth/redirect"
 import { selectIsAuthenticated } from "@/features/auth/store"
 
 const searchSchema = z.object({
@@ -19,17 +19,6 @@ const searchSchema = z.object({
    */
   redirect: z.string().optional(),
 })
-
-/**
- * Rejects anything that isn't a plain in-app path, so a crafted
- * `?redirect=https://evil.example` cannot turn the login page into an open
- * redirect. Protocol-relative `//host` is rejected too.
- */
-function safeRedirect(target: string | undefined): string {
-  if (!target) return FALLBACK_ROUTE
-  if (!target.startsWith("/") || target.startsWith("//")) return FALLBACK_ROUTE
-  return target
-}
 
 export const Route = createFileRoute("/login")({
   validateSearch: searchSchema,
