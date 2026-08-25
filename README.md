@@ -78,7 +78,7 @@ Mock state (invites, deletions) lives in page memory and resets on reload.
 
 | Command            | What it does                                            |
 | ------------------ | ------------------------------------------------------- |
-| `pnpm dev`         | Dev server with MSW, router devtools and query devtools  |
+| `pnpm dev`         | Dev server with MSW and the TanStack Devtools panel      |
 | `pnpm build`       | `tsc -b` then `vite build`                              |
 | `pnpm preview`     | Serve the production build                              |
 | `pnpm run typecheck` | Typecheck only (`tsc -b --noEmit`)                    |
@@ -127,8 +127,23 @@ All variables are typed in `src/vite-env.d.ts`.
 | `VITE_ENABLE_MOCKS` | no       | Set to `"false"` to run the dev server against a real API. |
 
 MSW is loaded behind `import.meta.env.DEV` in `src/main.tsx`, so neither `msw`
-nor the mock handlers appear in a production bundle. The router and query
-devtools are excluded the same way.
+nor the mock handlers appear in a production bundle. The devtools are excluded
+the same way, from `src/routes/__root.tsx`.
+
+### Devtools
+
+Router and Query devtools share a **single** panel, hosted as plugins inside the
+TanStack Devtools shell — one trigger in the bottom-right corner instead of two
+competing widgets. Router opens by default; click `Query` in the plugin strip to
+open it alongside (they tile side by side).
+
+Bottom-*right* is deliberate: bottom-left is where the sidebar's user menu sits,
+and the trigger covered it. `config` in `__root.tsx` also accepts `defaultOpen`,
+`hideUntilHover`, `triggerHidden` (hotkey-only, `Ctrl`+`~`) and `panelLocation`.
+
+Devtools never render under test — `__root.tsx` gates on
+`import.meta.env.MODE !== "test"` so the trigger cannot interfere with the
+integration tests' `getByRole` queries.
 
 ## Folder structure
 

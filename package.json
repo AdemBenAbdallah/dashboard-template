@@ -52,6 +52,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.10",
+    "@tanstack/react-devtools": "^0.10.12",
     "@tanstack/react-query-devtools": "^5.102.2",
     "@tanstack/react-router-devtools": "^1.167.1",
     "@tanstack/router-plugin": "^1.168.35",
