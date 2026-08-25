@@ -119,7 +119,7 @@ src/
   main.tsx                      # entry: starts MSW (dev), then mounts React
   app.tsx                       # providers + session bootstrap gate
   router.tsx                    # router instance, context, module augmentation
-  routeTree.gen.ts              # generated — gitignored, Biome-ignored
+  routeTree.gen.ts              # generated — committed, Biome-ignored
   index.css                     # Tailwind v4 + shadcn theme tokens
 
   routes/                       # file-based routes; the URL map, nothing more
@@ -285,7 +285,8 @@ If a route should be restricted to the new role, also update that route's
    Then set the same `roles` on the nav entry, and enforce it on the server.
 
 `routeTree.gen.ts` regenerates automatically while `pnpm dev` runs (or on the
-next `pnpm build`). It is gitignored and excluded from Biome.
+next `pnpm build`). It is committed (so a clean checkout can typecheck) and
+excluded from Biome.
 
 ### Adding a paginated list page
 
@@ -319,6 +320,15 @@ the role check in `src/mocks/handlers/operations-handlers.ts`.
 
 ## Tooling notes
 
+- **React Compiler is enabled** via `@vitejs/plugin-react`'s `compiler` flag in
+  `vite.config.ts`, which is what makes hand-written `useMemo`/`useCallback`
+  unnecessary. React 19 on its own does **not** auto-memoize — the compiler is
+  opt-in. Set `compiler: false` to turn it off, and re-add manual memoization
+  if you do.
+- **`routeTree.gen.ts` is committed**, not gitignored: `pnpm build` runs
+  `tsc -b` before `vite build`, so a clean checkout would otherwise fail to
+  typecheck. It regenerates automatically on `pnpm dev`/`pnpm build` and is
+  excluded from Biome.
 - **Biome only.** No ESLint, no Prettier. The current Vite `react-ts` template
   scaffolds **oxlint** rather than ESLint; it has been removed.
 - **`biome.jsonc` overrides** turn off a few rules for `src/components/ui/**`
