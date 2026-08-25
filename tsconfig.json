@@ -1,0 +1,15 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ],
+  "compilerOptions": {
+    // TypeScript 7 removed `baseUrl`; `paths` now resolve relative to this
+    // file's directory. The shadcn/ui Vite guide still shows `baseUrl` — it is
+    // an error to include it here.
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}

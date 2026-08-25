@@ -1,0 +1,113 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.10/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": false,
+    // Biome 2 replaced `files.ignore` with negated globs in `files.includes`.
+    // `.gitignore` is honoured via `vcs.useIgnoreFile`; these cover generated
+    // output that is not necessarily gitignored.
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!dist",
+      "!**/routeTree.gen.ts",
+      // Static assets, not source: the favicon and (later) MSW's generated
+      // service worker.
+      "!public"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "nursery": {
+        // Tailwind class sorting. shadcn/ui routes classes through `cn`, and
+        // variants are declared with `cva`, so both need to be registered.
+        "useSortedClasses": {
+          "level": "warn",
+          "options": {
+            "functions": ["cn", "clsx", "cva"]
+          }
+        }
+      },
+      "suspicious": {
+        // The project is strict TypeScript: `any` is never acceptable.
+        "noExplicitAny": "error"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "asNeeded"
+    }
+  },
+  "css": {
+    "parser": {
+      // Required for Tailwind v4's `@theme`, `@custom-variant`, `@apply`, ...
+      "tailwindDirectives": true
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "overrides": [
+    {
+      // Vendored shadcn/ui primitives, re-fetched by `pnpm dlx shadcn add`.
+      // Editing them to satisfy lint would be overwritten on the next update,
+      // and several findings are inherent to how the primitives work:
+      // `chart.tsx` injects CSS custom properties via dangerouslySetInnerHTML,
+      // `sidebar.tsx` persists its state in document.cookie. The formatter and
+      // every other recommended rule still apply.
+      "includes": ["src/components/ui/**"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useSemanticElements": "off",
+            "useFocusableInteractive": "off"
+          },
+          "correctness": { "useExhaustiveDependencies": "off" },
+          "security": { "noDangerouslySetInnerHtml": "off" },
+          "suspicious": {
+            "noArrayIndexKey": "off",
+            "noDocumentCookie": "off",
+            "noDoubleEquals": "off"
+          },
+          "nursery": { "useSortedClasses": "off" }
+        }
+      }
+    },
+    {
+      // Class sorting is off for the vendored primitives and for the
+      // dashboard-01-derived components, which lean heavily on Tailwind v4
+      // container-query variants (`@[250px]/card:`, `@4xl/main:`).
+      //
+      // `useSortedClasses` explicitly does not support screen/container variant
+      // sorting yet, and its autofix here is wrong in a way that changes what
+      // renders: it rewrites `hidden @[540px]/card:block` to
+      // `@[540px]/card:block hidden`, which makes `hidden` win and the element
+      // never appears. The rule stays ON for all hand-written code elsewhere.
+      "includes": ["src/features/dashboard/components/**"],
+      "linter": {
+        "rules": {
+          "nursery": { "useSortedClasses": "off" }
+        }
+      }
+    }
+  ]
+}

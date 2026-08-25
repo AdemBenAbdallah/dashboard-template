@@ -1,0 +1,4 @@
+allowBuilds:
+  msw: true
+minimumReleaseAgeExclude:
+  - '@types/node@26.3.0'
