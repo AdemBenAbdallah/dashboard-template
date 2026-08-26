@@ -13,6 +13,23 @@ import { ROLE_VALUES } from "./roles"
  * transforms below. Adapt here, never at a call site.
  */
 
+/**
+ * The account's address, a 1:1 relation on `User`.
+ *
+ * Arrives as a **raw Prisma row** — both the customers and professionals
+ * services serialize with `excludeExtraneousValues: false` and nothing declares
+ * this relation on `UserEntity`, so `id`, `createdAt` and `deletedAt` ride along
+ * too. Only what is rendered is parsed.
+ */
+const apiAddressSchema = z
+  .object({
+    pubkey: z.string().nullish(),
+    address: z.string().nullish(),
+    latitude: z.number().nullish(),
+    longitude: z.number().nullish(),
+  })
+  .loose()
+
 /** `ImageDto` — the backend serves files by `path`; `filename` is the fallback. */
 const apiImageSchema = z
   .object({
@@ -49,6 +66,14 @@ export const apiUserSchema = z
     phoneVerifiedAt: z.iso.datetime().nullish(),
     createdAt: z.iso.datetime().nullish(),
     lastLogin: z.iso.datetime().nullish(),
+    // Detail-only fields. They are on every list response too — the client was
+    // simply discarding them until the detail modal needed them.
+    idNumber: z.string().nullish(),
+    birthday: z.string().nullish(),
+    locale: z.string().nullish(),
+    // Only the `/customers` and `/professionals` responses carry this;
+    // `/users` and `/auth/profile` do not include the relation at all.
+    address: apiAddressSchema.nullish(),
   })
   .loose()
 
@@ -82,6 +107,16 @@ export const userSchema = apiUserSchema.transform((dto) => ({
   status: dto.status ?? null,
   isEmailVerified: verifiedFrom(dto.isEmailVerified, dto.emailVerifiedAt),
   isPhoneVerified: verifiedFrom(dto.isPhoneVerified, dto.phoneVerifiedAt),
+  idNumber: dto.idNumber ?? null,
+  birthday: dto.birthday ?? null,
+  locale: dto.locale ?? null,
+  address: dto.address?.address
+    ? {
+        label: dto.address.address,
+        latitude: dto.address.latitude ?? null,
+        longitude: dto.address.longitude ?? null,
+      }
+    : null,
   createdAt: dto.createdAt ?? null,
   lastLogin: dto.lastLogin ?? null,
 }))

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table"
 import type { ProfessionalRow } from "../schemas"
 import { AccountStatusBadge } from "./account-status-badge"
+import { RowNameButton, rowClickHandler } from "./row-trigger"
 import { UserCell } from "./user-cell"
 
 export const PROFESSIONAL_COLUMN_KEYS = [
@@ -25,18 +26,10 @@ export const PROFESSIONAL_COLUMN_KEYS = [
   "",
 ] as const
 
-/**
- * Area names come back as a translated-string relation rather than a plain
- * string, so only render one when it really is text.
- */
-function areaLabel(area: ProfessionalRow["area"]): string | null {
-  const name = area?.name
-  return typeof name === "string" && name ? name : null
-}
-
 export function ProfessionalsTable({
   professionals,
   onDelete,
+  onOpen,
   onApprovalChange,
   canDelete,
   canApprove,
@@ -44,6 +37,7 @@ export function ProfessionalsTable({
 }: {
   professionals: readonly ProfessionalRow[]
   onDelete: (row: ProfessionalRow) => void
+  onOpen: (row: ProfessionalRow) => void
   onApprovalChange: (row: ProfessionalRow, approve: boolean) => void
   canDelete: boolean
   canApprove: boolean
@@ -86,16 +80,23 @@ export function ProfessionalsTable({
               // Approval is a status transition, not a flag on the profile.
               const awaitingApproval = row.user.status === "INACTIVE"
               const busy = pendingId === row.id
-              const area = areaLabel(row.area)
+              const area = row.area?.label ?? null
 
               return (
                 <TableRow
                   key={row.id}
+                  onClick={rowClickHandler(() => onOpen(row))}
                   // Pending applications are what an admin is here to action.
-                  className={awaitingApproval ? "bg-amber-500/5" : undefined}
+                  className={
+                    awaitingApproval
+                      ? "cursor-pointer bg-amber-500/5 hover:bg-amber-500/10"
+                      : "cursor-pointer hover:bg-muted/50"
+                  }
                 >
                   <TableCell>
-                    <UserCell user={row.user} />
+                    <RowNameButton onOpen={() => onOpen(row)}>
+                      <UserCell user={row.user} />
+                    </RowNameButton>
                     {area ? (
                       <span className="text-muted-foreground text-xs">
                         {area}

@@ -83,6 +83,101 @@ describe("users segments", () => {
   })
 })
 
+describe("row detail modal", () => {
+  it("opens the modal for the clicked row", async () => {
+    const { user } = await renderRoute("/users/customers", {
+      as: ROLES.SUPERADMIN,
+    })
+
+    await user.click(await (await table()).findByText("Hana Aziz"))
+
+    const modal = await screen.findByRole("dialog")
+    expect(within(modal).getByText("Hana Aziz")).toBeVisible()
+    // Address comes from the profile endpoint's `user.address` relation.
+    expect(
+      within(modal).getByText(/King Fahd Road, Al Olaya, Riyadh/),
+    ).toBeVisible()
+  })
+
+  it("shows a professional's profile fields", async () => {
+    const { user } = await renderRoute("/users/professionals", {
+      as: ROLES.SUPERADMIN,
+    })
+
+    await user.click(await (await table()).findByText("Yusuf Karim"))
+
+    const modal = await screen.findByRole("dialog")
+    expect(within(modal).getByText("Karim Maintenance")).toBeVisible()
+    expect(within(modal).getByText("80012345600017")).toBeVisible()
+    expect(within(modal).getByText("Riyadh North")).toBeVisible()
+  })
+
+  it("hides the Address section when the account has none", async () => {
+    // `/users` does not include the address relation at all, so an internal
+    // account must show no Address section rather than an empty one.
+    const { user } = await renderRoute("/users/admins", {
+      as: ROLES.SUPERADMIN,
+    })
+
+    await user.click(await (await table()).findByText("Frankie Osei"))
+
+    const modal = await screen.findByRole("dialog")
+    expect(within(modal).getByText("Frankie Osei")).toBeVisible()
+    expect(within(modal).queryByText("Address")).toBeNull()
+  })
+
+  /**
+   * Regression: without `stopPropagation` on the action buttons, deleting a
+   * user also opened their detail modal behind the confirmation dialog.
+   */
+  it("does not open the modal when a row action is clicked", async () => {
+    const { user } = await renderRoute("/users/admins", {
+      as: ROLES.SUPERADMIN,
+    })
+    expect(await (await table()).findByText("Frankie Osei")).toBeVisible()
+
+    await user.click(
+      screen.getByRole("button", { name: /delete frankie osei/i }),
+    )
+
+    // The confirmation is an alertdialog; the detail modal is a dialog.
+    expect(await screen.findByRole("alertdialog")).toBeVisible()
+    // Queried against the DOM, not the accessibility tree: the alert dialog
+    // aria-hides everything else, so `queryByRole` would not see a detail
+    // modal that had wrongly opened behind it.
+    expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(0)
+  })
+
+  it("is reachable by keyboard through the row's name button", async () => {
+    const { user } = await renderRoute("/users/admins", {
+      as: ROLES.SUPERADMIN,
+    })
+    const rows = await table()
+    const trigger = (await rows.findByText("Frankie Osei")).closest("button")
+    expect(trigger).not.toBeNull()
+
+    ;(trigger as HTMLButtonElement).focus()
+    await user.keyboard("{Enter}")
+
+    expect(await screen.findByRole("dialog")).toBeVisible()
+  })
+
+  it("approves a professional from the modal footer", async () => {
+    const { user } = await renderRoute("/users/professionals", {
+      as: ROLES.SUPERADMIN,
+    })
+
+    await user.click(await (await table()).findByText("Layla Nasser"))
+    const modal = await screen.findByRole("dialog")
+    await user.click(within(modal).getByRole("button", { name: /^approve$/i }))
+
+    await waitFor(async () => {
+      const row = (await table()).getByText("Layla Nasser").closest("tr")
+      expect(within(row as HTMLElement).getByText("Active")).toBeVisible()
+    })
+  })
+})
+
 describe("professional approval", () => {
   it("approves a professional awaiting approval", async () => {
     const { user } = await renderRoute("/users/professionals", {

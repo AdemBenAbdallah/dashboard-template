@@ -26,6 +26,19 @@ export interface ApiUser {
   phoneVerifiedAt: string | null
   createdAt: string
   lastLogin: string | null
+  idNumber: string
+  birthday: string | null
+  locale: string | null
+  /**
+   * Only the profile endpoints include this relation — `/users` does not, which
+   * is why the detail modal's Address section is absent for internal accounts.
+   */
+  address?: {
+    pubkey: string
+    address: string
+    latitude: number
+    longitude: number
+  } | null
 }
 
 /**
@@ -56,6 +69,9 @@ const SEED_ACCOUNTS: readonly SeedAccount[] = [
     phoneVerifiedAt: "2024-01-20T09:00:00.000Z",
     createdAt: "2024-01-15T09:00:00.000Z",
     lastLogin: "2024-08-01T09:00:00.000Z",
+    idNumber: "1000000001",
+    birthday: "1990-05-14",
+    locale: "en",
   },
   {
     pubkey: "usr_002",
@@ -71,6 +87,9 @@ const SEED_ACCOUNTS: readonly SeedAccount[] = [
     phoneVerifiedAt: "2024-01-20T09:00:00.000Z",
     createdAt: "2024-03-02T11:30:00.000Z",
     lastLogin: null,
+    idNumber: "1000000002",
+    birthday: "1990-05-14",
+    locale: "en",
   },
   {
     pubkey: "usr_003",
@@ -86,6 +105,9 @@ const SEED_ACCOUNTS: readonly SeedAccount[] = [
     phoneVerifiedAt: "2024-01-20T09:00:00.000Z",
     createdAt: "2024-05-21T14:45:00.000Z",
     lastLogin: null,
+    idNumber: "1000000003",
+    birthday: "1990-05-14",
+    locale: "en",
   },
   {
     pubkey: "usr_004",
@@ -101,6 +123,9 @@ const SEED_ACCOUNTS: readonly SeedAccount[] = [
     phoneVerifiedAt: null,
     createdAt: "2024-07-08T08:15:00.000Z",
     lastLogin: null,
+    idNumber: "1000000004",
+    birthday: "1990-05-14",
+    locale: "en",
   },
   {
     pubkey: "usr_006",
@@ -116,6 +141,9 @@ const SEED_ACCOUNTS: readonly SeedAccount[] = [
     phoneVerifiedAt: "2024-02-20T09:00:00.000Z",
     createdAt: "2024-02-19T08:15:00.000Z",
     lastLogin: null,
+    idNumber: "1000000005",
+    birthday: "1990-05-14",
+    locale: "en",
   },
   {
     pubkey: "usr_007",
@@ -131,6 +159,9 @@ const SEED_ACCOUNTS: readonly SeedAccount[] = [
     phoneVerifiedAt: "2024-03-20T09:00:00.000Z",
     createdAt: "2024-03-19T08:15:00.000Z",
     lastLogin: null,
+    idNumber: "1000000006",
+    birthday: "1990-05-14",
+    locale: "en",
   },
   {
     // Authenticates successfully but has no business in the dashboard — this
@@ -148,6 +179,9 @@ const SEED_ACCOUNTS: readonly SeedAccount[] = [
     phoneVerifiedAt: "2024-01-20T09:00:00.000Z",
     createdAt: "2024-09-11T10:00:00.000Z",
     lastLogin: null,
+    idNumber: "1000000007",
+    birthday: "1990-05-14",
+    locale: "en",
   },
 ]
 
@@ -181,6 +215,12 @@ export interface SeedProfile {
 const SEED_CUSTOMER_ACCOUNTS: readonly SeedAccount[] = [
   {
     pubkey: "usr_101",
+    address: {
+      pubkey: "adr_101",
+      address: "King Fahd Road, Al Olaya, Riyadh",
+      latitude: 24.6944,
+      longitude: 46.6853,
+    },
     email: "hana@example.test",
     password: "password123",
     firstName: "Hana",
@@ -193,9 +233,18 @@ const SEED_CUSTOMER_ACCOUNTS: readonly SeedAccount[] = [
     phoneVerifiedAt: "2024-04-02T09:00:00.000Z",
     createdAt: "2024-04-01T09:00:00.000Z",
     lastLogin: null,
+    idNumber: "1000000008",
+    birthday: "1990-05-14",
+    locale: "en",
   },
   {
     pubkey: "usr_102",
+    address: {
+      pubkey: "adr_102",
+      address: "Prince Sultan Street, Jeddah",
+      latitude: 21.581,
+      longitude: 39.1653,
+    },
     email: "omar@example.test",
     password: "password123",
     firstName: "Omar",
@@ -208,12 +257,21 @@ const SEED_CUSTOMER_ACCOUNTS: readonly SeedAccount[] = [
     phoneVerifiedAt: null,
     createdAt: "2024-05-01T09:00:00.000Z",
     lastLogin: null,
+    idNumber: "1000000009",
+    birthday: "1990-05-14",
+    locale: "en",
   },
 ]
 
 const SEED_PROFESSIONAL_ACCOUNTS: readonly SeedAccount[] = [
   {
     pubkey: "usr_201",
+    address: {
+      pubkey: "adr_201",
+      address: "Al Takhassusi Street, Riyadh",
+      latitude: 24.7136,
+      longitude: 46.6753,
+    },
     email: "yusuf@pro.test",
     password: "password123",
     firstName: "Yusuf",
@@ -226,6 +284,9 @@ const SEED_PROFESSIONAL_ACCOUNTS: readonly SeedAccount[] = [
     phoneVerifiedAt: "2024-02-02T09:00:00.000Z",
     createdAt: "2024-02-01T09:00:00.000Z",
     lastLogin: null,
+    idNumber: "1000000010",
+    birthday: "1990-05-14",
+    locale: "en",
   },
   {
     // Self-registered and awaiting approval — the state the approve action exists for.
@@ -242,6 +303,9 @@ const SEED_PROFESSIONAL_ACCOUNTS: readonly SeedAccount[] = [
     phoneVerifiedAt: "2024-06-02T09:00:00.000Z",
     createdAt: "2024-06-01T09:00:00.000Z",
     lastLogin: null,
+    idNumber: "1000000011",
+    birthday: "1990-05-14",
+    locale: "en",
   },
 ]
 
@@ -403,9 +467,16 @@ export function resolveCaller(
   return accounts.find((account) => account.pubkey === pubkey)
 }
 
-/** What `/auth/signin` returns: the raw entity, timestamps and all. */
+/**
+ * What `/auth/signin` and `GET /users` return: the raw entity, timestamps and
+ * all — but **without** the address.
+ *
+ * That omission is faithful, not an oversight: those routes `include: { image }`
+ * only, so an internal account never carries an address. Just the profile
+ * endpoints join it, via `withUser` below.
+ */
 export function toPublicUser(account: SeedAccount): ApiUser {
-  const { password: _password, ...user } = account
+  const { password: _password, address: _address, ...user } = account
   return user
 }
 
@@ -440,6 +511,9 @@ export function addAccount(input: {
     phoneVerifiedAt: null,
     createdAt: new Date().toISOString(),
     lastLogin: null,
+    idNumber: "1000000012",
+    birthday: "1990-05-14",
+    locale: "en",
   }
   accounts.push(account)
   return account
@@ -452,7 +526,12 @@ export function withUser(row: SeedProfile) {
   )
   if (!account) return null
   const { userPubkey: _userPubkey, ...profile } = row
-  return { ...profile, user: toPublicUser(account) }
+  // `include: { user: { image, address } }` — the address rides along here and
+  // only here.
+  return {
+    ...profile,
+    user: { ...toPublicUser(account), address: account.address ?? null },
+  }
 }
 
 /** Sets an account's status — what `/professionals/:pubkey/approve` really does. */

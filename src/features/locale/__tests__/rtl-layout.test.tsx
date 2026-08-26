@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react"
+import { screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import { ROLES } from "@/features/auth/roles"
 import { renderRoute } from "@/test/utils"
@@ -72,6 +72,20 @@ describe("left-to-right runs are bidi-isolated", () => {
 
     const delta = await screen.findByText("-20%")
     expect(delta.closest("bdi")).toHaveAttribute("dir", "ltr")
+  })
+
+  it("wraps a phone number in the user detail modal", async () => {
+    useLocaleStore.getState().setLocale("ar")
+
+    const { user } = await renderRoute("/users/customers", {
+      as: ROLES.SUPERADMIN,
+    })
+    await user.click(await screen.findByText("Hana Aziz"))
+
+    const modal = await screen.findByRole("dialog")
+    const phone = within(modal).getByText("+966500000101")
+    expect(phone.tagName).toBe("BDI")
+    expect(phone).toHaveAttribute("dir", "ltr")
   })
 
   it("wraps a phone number in the users table", async () => {
@@ -156,6 +170,20 @@ describe("dates follow the locale", () => {
     // `toLocaleDateString("ar", …)` yields an Arabic month name; the English
     // fallback would read "Jan"/"Feb"/…
     expect(table.textContent).not.toMatch(
+      /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/,
+    )
+  })
+
+  it("formats the detail modal dates in Arabic", async () => {
+    useLocaleStore.getState().setLocale("ar")
+
+    const { user } = await renderRoute("/users/customers", {
+      as: ROLES.SUPERADMIN,
+    })
+    await user.click(await screen.findByText("Hana Aziz"))
+
+    const modal = await screen.findByRole("dialog")
+    expect(modal.textContent).not.toMatch(
       /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/,
     )
   })

@@ -274,7 +274,9 @@
       "revokeAction": "Revoke {{name}}",
       "toastApproved": "Professional approved",
       "toastRevoked": "Professional access revoked",
-      "toastError": "Could not update the account."
+      "toastError": "Could not update the account.",
+      "approve": "Approve",
+      "revoke": "Revoke access"
     },
     "delete": {
       "title": "Delete {{name}}?",
@@ -283,6 +285,22 @@
       "confirming": "Deleting…",
       "toastSuccess": "User deleted",
       "toastError": "Could not delete the user."
+    },
+    "detail": {
+      "contact": "Contact",
+      "account": "Account",
+      "address": "Address",
+      "professional": "Professional details",
+      "customer": "Customer details",
+      "idNumber": "National ID",
+      "birthday": "Date of birth",
+      "locale": "Language",
+      "addressLine": "Address",
+      "coordinates": "Coordinates",
+      "area": "Service area",
+      "partnerCompany": "Partner company",
+      "profileId": "Profile ID",
+      "openAction": "View {{name}}"
     }
   },
   "settings": {

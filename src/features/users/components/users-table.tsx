@@ -15,6 +15,7 @@ import { useLocaleStore } from "@/features/locale/store"
 import { formatDate } from "@/lib/utils"
 import { AccountStatusBadge } from "./account-status-badge"
 import { RoleBadge } from "./role-badge"
+import { RowNameButton, rowClickHandler } from "./row-trigger"
 import { UserCell } from "./user-cell"
 
 export const USER_COLUMN_KEYS = [
@@ -30,6 +31,7 @@ export const USER_COLUMN_KEYS = [
 interface UsersTableProps {
   users: readonly User[]
   onDelete: (user: User) => void
+  onOpen: (user: User) => void
   /** The signed-in user's own id — deleting yourself is disabled. */
   currentUserId: string | undefined
   canDelete: boolean
@@ -39,6 +41,7 @@ interface UsersTableProps {
 export function UsersTable({
   users,
   onDelete,
+  onOpen,
   currentUserId,
   canDelete,
 }: UsersTableProps) {
@@ -74,9 +77,15 @@ export function UsersTable({
             </TableRow>
           ) : (
             users.map((user) => (
-              <TableRow key={user.id}>
+              <TableRow
+                key={user.id}
+                onClick={rowClickHandler(() => onOpen(user))}
+                className="cursor-pointer hover:bg-muted/50"
+              >
                 <TableCell>
-                  <UserCell user={user} />
+                  <RowNameButton onOpen={() => onOpen(user)}>
+                    <UserCell user={user} />
+                  </RowNameButton>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   <Ltr>{user.email}</Ltr>

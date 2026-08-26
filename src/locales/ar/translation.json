@@ -278,7 +278,9 @@
       "revokeAction": "إلغاء صلاحية {{name}}",
       "toastApproved": "تمت الموافقة على المهني",
       "toastRevoked": "تم إلغاء صلاحية المهني",
-      "toastError": "تعذّر تحديث الحساب."
+      "toastError": "تعذّر تحديث الحساب.",
+      "approve": "موافقة",
+      "revoke": "إلغاء الصلاحية"
     },
     "delete": {
       "title": "حذف {{name}}؟",
@@ -287,6 +289,22 @@
       "confirming": "جارٍ الحذف…",
       "toastSuccess": "تم حذف المستخدم",
       "toastError": "تعذّر حذف المستخدم."
+    },
+    "detail": {
+      "contact": "بيانات الاتصال",
+      "account": "الحساب",
+      "address": "العنوان",
+      "professional": "بيانات المهني",
+      "customer": "بيانات العميل",
+      "idNumber": "رقم الهوية",
+      "birthday": "تاريخ الميلاد",
+      "locale": "اللغة",
+      "addressLine": "العنوان",
+      "coordinates": "الإحداثيات",
+      "area": "منطقة الخدمة",
+      "partnerCompany": "الشركة الشريكة",
+      "profileId": "معرّف الملف",
+      "openAction": "عرض {{name}}"
     }
   },
   "settings": {

@@ -16,6 +16,7 @@ import {
   ProfessionalsTable,
 } from "./professionals-table"
 import { SegmentSearch } from "./segment-search"
+import { type DetailRow, UserDetailDialog } from "./user-detail-dialog"
 import { USER_COLUMN_KEYS, UsersTable } from "./users-table"
 
 /** Only these roles may destroy or approve accounts. */
@@ -45,11 +46,27 @@ export function UserSegmentPage({ segmentId }: { segmentId: UserSegmentId }) {
   const [params, setParams] = useState<PaginationParams>(DEFAULT_PAGINATION)
   const [search, setSearch] = useState("")
   const [pendingDelete, setPendingDelete] = useState<DeletableRow | null>(null)
+  const [selected, setSelected] = useState<DetailRow | null>(null)
 
   const { data, isFetching, error } = useSegmentRows(segmentId, params, search)
   const approval = useProfessionalApproval()
 
   const canMutate = hasRole(currentUser?.role, MUTATOR_ROLES)
+
+  /** Every segment's row reduces to this for the delete confirmation. */
+  const toDeletable = (row: DetailRow): DeletableRow => {
+    const account = "user" in row ? row.user : row
+    return { id: row.id, name: account.name, email: account.email }
+  }
+
+  /**
+   * Deleting from the detail modal closes it and opens the existing confirm,
+   * so the destructive path stays single rather than being duplicated.
+   */
+  const requestDelete = (row: DetailRow) => {
+    setSelected(null)
+    setPendingDelete(toDeletable(row))
+  }
 
   // Searching from page 3 would otherwise land on an empty page.
   const handleSearch = (next: string) => {
@@ -79,19 +96,15 @@ export function UserSegmentPage({ segmentId }: { segmentId: UserSegmentId }) {
               users={data.rows as never}
               currentUserId={currentUser?.id}
               canDelete={canMutate}
-              onDelete={setPendingDelete}
+              onOpen={setSelected}
+              onDelete={(user) => setPendingDelete(toDeletable(user))}
             />
           ) : segment.source.kind === "customers" ? (
             <CustomersTable
               customers={data.rows as unknown as CustomerRow[]}
               canDelete={canMutate}
-              onDelete={(row) =>
-                setPendingDelete({
-                  id: row.id,
-                  name: row.user.name,
-                  email: row.user.email,
-                })
-              }
+              onOpen={setSelected}
+              onDelete={(row) => setPendingDelete(toDeletable(row))}
             />
           ) : (
             <ProfessionalsTable
@@ -104,13 +117,8 @@ export function UserSegmentPage({ segmentId }: { segmentId: UserSegmentId }) {
               onApprovalChange={(row, approve) =>
                 approval.mutate({ id: row.id, approve })
               }
-              onDelete={(row) =>
-                setPendingDelete({
-                  id: row.id,
-                  name: row.user.name,
-                  email: row.user.email,
-                })
-              }
+              onOpen={setSelected}
+              onDelete={(row) => setPendingDelete(toDeletable(row))}
             />
           )}
 
@@ -128,6 +136,16 @@ export function UserSegmentPage({ segmentId }: { segmentId: UserSegmentId }) {
           rows={params.pageSize}
         />
       )}
+
+      <UserDetailDialog
+        row={selected}
+        segmentId={segmentId}
+        canMutate={canMutate}
+        onDelete={requestDelete}
+        onOpenChange={(open) => {
+          if (!open) setSelected(null)
+        }}
+      />
 
       <DeleteUserDialog
         row={pendingDelete}

@@ -14,6 +14,7 @@ import { useLocaleStore } from "@/features/locale/store"
 import { formatDate } from "@/lib/utils"
 import type { CustomerRow } from "../schemas"
 import { AccountStatusBadge } from "./account-status-badge"
+import { RowNameButton, rowClickHandler } from "./row-trigger"
 import { UserCell } from "./user-cell"
 
 export const CUSTOMER_COLUMN_KEYS = [
@@ -28,10 +29,12 @@ export const CUSTOMER_COLUMN_KEYS = [
 export function CustomersTable({
   customers,
   onDelete,
+  onOpen,
   canDelete,
 }: {
   customers: readonly CustomerRow[]
   onDelete: (row: CustomerRow) => void
+  onOpen: (row: CustomerRow) => void
   canDelete: boolean
 }) {
   const { t } = useTranslation()
@@ -66,9 +69,15 @@ export function CustomersTable({
             </TableRow>
           ) : (
             customers.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow
+                key={row.id}
+                onClick={rowClickHandler(() => onOpen(row))}
+                className="cursor-pointer hover:bg-muted/50"
+              >
                 <TableCell>
-                  <UserCell user={row.user} />
+                  <RowNameButton onOpen={() => onOpen(row)}>
+                    <UserCell user={row.user} />
+                  </RowNameButton>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   <Ltr>{row.user.email}</Ltr>

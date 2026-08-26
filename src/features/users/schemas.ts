@@ -13,12 +13,32 @@ export { userSchema }
  * with the account nested under `user`. Flattened here so the tables see one
  * predictable shape.
  */
+/**
+ * A service area. The raw row also carries `boundary`, `centreLatitude`,
+ * `centreLongitude` and `colorTag`, none of which this feature renders, so the
+ * transform below narrows it to the two fields that are used.
+ *
+ * `name` is a MultiLanguageString relation, not a string — it is only rendered
+ * when it actually resolves to text.
+ */
 const areaSchema = z
   .object({
     pubkey: z.string(),
     name: z.unknown().nullish(),
   })
   .loose()
+
+/** Pulls a displayable label out of the area's translated-name relation. */
+function areaLabel(name: unknown): string | null {
+  if (typeof name === "string") return name || null
+  if (name && typeof name === "object") {
+    for (const key of ["en", "ar", "value", "text"]) {
+      const candidate = (name as Record<string, unknown>)[key]
+      if (typeof candidate === "string" && candidate) return candidate
+    }
+  }
+  return null
+}
 
 const partnerCompanySchema = z
   .object({
@@ -63,7 +83,9 @@ export const professionalRowSchema = z
     hasTools: row.hasTools ?? false,
     company: row.company ?? null,
     siret: row.siret ?? null,
-    area: row.area ?? null,
+    area: row.area
+      ? { id: row.area.pubkey, label: areaLabel(row.area.name) }
+      : null,
     partnerCompany: row.partnerCompany ?? null,
     createdAt: row.createdAt ?? row.user.createdAt,
   }))
