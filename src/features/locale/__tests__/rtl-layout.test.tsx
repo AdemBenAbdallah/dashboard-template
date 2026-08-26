@@ -156,6 +156,32 @@ describe("field icons follow the locale direction", () => {
 })
 
 /**
+ * Overlay chrome must not be pinned to a physical side either.
+ *
+ * `DialogContent`'s close button shipped as `absolute top-2 right-2`, so under
+ * an RTL locale it sat on top of the avatar in the modal's top-right corner
+ * instead of moving to the free corner. The same `right-*` appeared on the
+ * sheet's close button and on the select/dropdown check indicators.
+ */
+describe("overlay chrome follows the locale direction", () => {
+  it("puts the dialog close button on the logical end edge", async () => {
+    useLocaleStore.getState().setLocale("ar")
+
+    const { user } = await renderRoute("/users/admins", {
+      as: ROLES.SUPERADMIN,
+    })
+    await user.click(await screen.findByText("Frankie Osei"))
+
+    const modal = await screen.findByRole("dialog")
+    // The corner X, not the footer's Close button — both carry the same label.
+    const close = modal.querySelector('[data-slot="dialog-close"]')
+    expect(close).not.toBeNull()
+    expect((close as HTMLElement).className).toContain("end-2")
+    expect((close as HTMLElement).className).not.toMatch(/\bright-\d/)
+  })
+})
+
+/**
  * Dates are rendered through `formatDate(value, locale)`. Omitting the second
  * argument silently falls back to English, which is easy to do and invisible
  * until someone switches locale.

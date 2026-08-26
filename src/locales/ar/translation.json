@@ -304,7 +304,10 @@
       "area": "منطقة الخدمة",
       "partnerCompany": "الشركة الشريكة",
       "profileId": "معرّف الملف",
-      "openAction": "عرض {{name}}"
+      "openAction": "عرض {{name}}",
+      "copied": "تم نسخ {{field}}",
+      "copyFailed": "تعذّر النسخ إلى الحافظة.",
+      "copyAction": "نسخ {{field}}"
     }
   },
   "settings": {

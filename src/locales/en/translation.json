@@ -300,7 +300,10 @@
       "area": "Service area",
       "partnerCompany": "Partner company",
       "profileId": "Profile ID",
-      "openAction": "View {{name}}"
+      "openAction": "View {{name}}",
+      "copied": "{{field}} copied",
+      "copyFailed": "Could not copy to the clipboard.",
+      "copyAction": "Copy {{field}}"
     }
   },
   "settings": {

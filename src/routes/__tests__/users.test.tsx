@@ -178,6 +178,24 @@ describe("row detail modal", () => {
   })
 })
 
+describe("copying a contact value", () => {
+  it("copies the email to the clipboard", async () => {
+    // `userEvent.setup()` installs its own clipboard stub, so this reads back
+    // through the same API the component wrote to.
+    const { user } = await renderRoute("/users/admins", {
+      as: ROLES.SUPERADMIN,
+    })
+    await user.click(await (await table()).findByText("Frankie Osei"))
+
+    const modal = await screen.findByRole("dialog")
+    await user.click(within(modal).getByRole("button", { name: /copy email/i }))
+
+    await waitFor(async () => {
+      expect(await navigator.clipboard.readText()).toBe("frankie@acme.test")
+    })
+  })
+})
+
 describe("professional approval", () => {
   it("approves a professional awaiting approval", async () => {
     const { user } = await renderRoute("/users/professionals", {

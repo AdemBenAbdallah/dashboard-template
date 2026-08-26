@@ -1,6 +1,14 @@
-import { CheckIcon, Trash2Icon, XIcon } from "lucide-react"
+import {
+  AlertCircleIcon,
+  BadgeCheckIcon,
+  CheckIcon,
+  CopyIcon,
+  Trash2Icon,
+  XIcon,
+} from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
+import { toast } from "sonner"
 import { Ltr } from "@/components/shared/ltr"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -15,7 +23,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import type { User } from "@/features/auth/schemas"
 import { useLocaleStore } from "@/features/locale/store"
-import { formatDate } from "@/lib/utils"
+import { cn, formatDate } from "@/lib/utils"
 import { useProfessionalApproval } from "../hooks/use-users"
 import type { CustomerRow, ProfessionalRow } from "../schemas"
 import { findSegment, type UserSegmentId } from "../segments"
@@ -103,11 +111,66 @@ function VerifiedNote({ verified }: { verified: boolean | null }) {
   const { t } = useTranslation()
   if (verified === null) return null
 
+  const label = t(
+    verified ? "settings.account.verified" : "settings.account.unverified",
+  )
+  const Icon = verified ? BadgeCheckIcon : AlertCircleIcon
+
   return (
-    <span className="text-muted-foreground text-xs">
-      {t(
-        verified ? "settings.account.verified" : "settings.account.unverified",
+    <Icon
+      aria-label={label}
+      className={cn(
+        "size-3.5 shrink-0",
+        verified
+          ? "text-emerald-600 dark:text-emerald-400"
+          : "text-amber-600 dark:text-amber-400",
       )}
+    />
+  )
+}
+
+/**
+ * A contact value with a copy button.
+ *
+ * Support work is mostly "get this address into another window", and the row
+ * click guard now swallows a drag-select, so copying by hand got harder. The
+ * button only surfaces on hover or focus so it does not compete with the value.
+ */
+function CopyableValue({
+  value,
+  label,
+  children,
+}: {
+  value: string
+  label: string
+  children: ReactNode
+}) {
+  const { t } = useTranslation()
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(value)
+      toast.success(t("users.detail.copied", { field: label }))
+    } catch {
+      // Clipboard access is denied outside a secure context. There is nothing
+      // useful to retry, and a failed copy must not look like a success.
+      toast.error(t("users.detail.copyFailed"))
+    }
+  }
+
+  return (
+    <span className="group/copy flex items-center gap-1.5">
+      {children}
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        aria-label={t("users.detail.copyAction", { field: label })}
+        onClick={copy}
+        className="opacity-0 transition-opacity focus-visible:opacity-100 group-hover/copy:opacity-100"
+      >
+        <CopyIcon className="size-3.5" />
+      </Button>
     </span>
   )
 }
@@ -151,16 +214,16 @@ export function UserDetailDialog({
     <Dialog open onOpenChange={onOpenChange}>
       {/* The primitive defaults to `sm:max-w-sm`, too narrow for a field list. */}
       <DialogContent className="max-h-[85vh] gap-0 overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
+        <DialogHeader className="pe-8">
           <div className="flex items-center gap-3">
-            <Avatar className="size-10">
+            <Avatar className="size-12">
               {user.avatarUrl ? (
                 <AvatarImage src={user.avatarUrl} alt="" />
               ) : null}
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <div className="grid gap-0.5 text-start">
-              <DialogTitle>{user.name}</DialogTitle>
+              <DialogTitle className="text-base">{user.name}</DialogTitle>
               <DialogDescription>
                 <Ltr>{user.email}</Ltr>
               </DialogDescription>
@@ -179,19 +242,25 @@ export function UserDetailDialog({
               {
                 label: t("users.columns.email"),
                 value: (
-                  <span className="flex items-center gap-2">
+                  <CopyableValue
+                    value={user.email}
+                    label={t("users.columns.email")}
+                  >
                     <Ltr>{user.email}</Ltr>
                     <VerifiedNote verified={user.isEmailVerified} />
-                  </span>
+                  </CopyableValue>
                 ),
               },
               {
                 label: t("users.columns.phone"),
                 value: user.phone ? (
-                  <span className="flex items-center gap-2">
+                  <CopyableValue
+                    value={user.phone}
+                    label={t("users.columns.phone")}
+                  >
                     <Ltr>{user.phone}</Ltr>
                     <VerifiedNote verified={user.isPhoneVerified} />
-                  </span>
+                  </CopyableValue>
                 ) : null,
               },
             ]}
