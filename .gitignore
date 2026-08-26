@@ -28,3 +28,6 @@ dist-ssr
 .env.*
 !.env.example
 
+
+# TanStack Router plugin scratch files
+.tanstack/

@@ -24,7 +24,19 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
 
   // Gating layer 2 of 3 — see the note in `nav-items.ts`. Filtering happens
   // before render, so restricted links are never in the DOM at all.
-  const items = NAV_ITEMS.filter((item) => hasRole(role, item.roles))
+  //
+  // Children are filtered too, and a group left with none is dropped: that is
+  // what removes the whole Users section for a role with no segments, without
+  // naming any role here.
+  const items = NAV_ITEMS.filter((item) => hasRole(role, item.roles)).flatMap(
+    (item) => {
+      if (!item.children) return [item]
+      const children = item.children.filter((child) =>
+        hasRole(role, child.roles),
+      )
+      return children.length ? [{ ...item, children }] : []
+    },
+  )
 
   return (
     // `side` is the one piece of direction the sidebar cannot infer: its

@@ -14,6 +14,15 @@ interface RetriableConfig extends InternalAxiosRequestConfig {
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: { "Content-Type": "application/json" },
+  // Serialise array params as `?role=A&role=B`, not axios's default
+  // `?role[]=A&role[]=B`.
+  //
+  // This is not cosmetic. The backend reads `query['role']` and branches on
+  // `isArray`, so the bracketed form arrives under the key `role[]`, the filter
+  // is silently skipped, and the endpoint answers 200 with *every* user — an
+  // admin would see the super admins they are not allowed to list. Verified
+  // against the running server.
+  paramsSerializer: { indexes: null },
 })
 
 /**

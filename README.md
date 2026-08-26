@@ -25,17 +25,6 @@ In development the Vite proxy forwards `/v1` to `http://localhost:5000`; set
 `VITE_PROXY_TARGET` to point elsewhere, and `VITE_ENABLE_MOCKS=false` to bypass
 MSW and hit the real service. See `.env.example`.
 
-`pnpm test:live` runs `live/auth.live.test.ts` against a running backend — login,
-profile, session restore, 401 refresh-and-replay, logout — using the app's own
-auth module. Credentials come from the environment, with no defaults:
-
-```bash
-LIVE_EMAIL=you@example.com LIVE_PASSWORD=... pnpm test:live
-```
-
-It is separate from `pnpm test` because the unit suite runs entirely on MSW and
-so can never catch the server disagreeing with the client. Sign-in is throttled
-at 10 requests / 30s, so the file authenticates once and shares the session.
 
 ## Requirements
 
@@ -69,24 +58,93 @@ pnpm exec msw init public/ --save
 
 ## Mock credentials
 
-The mock API seeds five accounts. **Every account uses the password
+The mock API seeds accounts for every role. **Every account uses the password
 `password123`.**
 
-| Email                | Password      | Role         | Sees                |
-| -------------------- | ------------- | ------------ | ------------------- |
-| `admin@acme.test`    | `password123` | `SUPERADMIN` | Everything          |
-| `user@acme.test`     | `password123` | `STAFF`      | Dashboard, Settings |
-| `casey@acme.test`    | `password123` | `STAFF`      | Dashboard, Settings |
-| `dana@acme.test`     | `password123` | `SUPERADMIN` | Everything          |
-| `customer@acme.test` | `password123` | `CUSTOMER`   | Nothing — rejected  |
+| Email                  | Role              | Sees in Users                       |
+| ---------------------- | ----------------- | ----------------------------------- |
+| `admin@acme.test`      | `SUPERADMIN`      | All five segments                   |
+| `devadmin@acme.test`   | `ADMIN_DEVELOPER` | All five segments                   |
+| `frankie@acme.test`    | `ADMIN`           | Staff, Customers, Professionals     |
+| `user@acme.test`       | `STAFF`           | Customers, Professionals            |
+| `customer@acme.test`   | `CUSTOMER`        | Cannot sign in — rejected at login   |
 
-`customer@acme.test` has valid credentials and still cannot sign in: the backend
-authenticates any active account, so the dashboard checks `DASHBOARD_ROLES` on
-top of it.
+Sign in as `frankie@acme.test` to verify the guards: the Super admins and Admins
+sub-items are absent from the sidebar, and navigating directly to either URL
+redirects to `/dashboard`.
 
-Sign in as `user@acme.test` to verify the guards: Services, Requests, Card
-Payments and Users are all absent from the sidebar, and navigating directly to
-any of those URLs redirects to `/dashboard`.
+## The Users section
+
+One collapsible sidebar entry expanding into five role segments, each its own
+route and table:
+
+| Segment | Route | Source |
+| --- | --- | --- |
+| Super admins | `/users/super-admins` | `GET /users?role=SUPERADMIN&role=ADMIN_DEVELOPER` |
+| Admins | `/users/admins` | `GET /users?role=ADMIN` |
+| Staff | `/users/staff` | `GET /users?role=STAFF` |
+| Customers | `/users/customers` | `GET /customers` |
+| Professionals | `/users/professionals` | `GET /professionals` |
+
+Who sees what:
+
+| Signed-in role | Super admins | Admins | Staff | Customers | Professionals |
+| --- | :--: | :--: | :--: | :--: | :--: |
+| `SUPERADMIN` / `ADMIN_DEVELOPER` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `ADMIN` | – | – | ✓ | ✓ | ✓ |
+| `STAFF` | – | – | – | ✓ | ✓ |
+| `HR` | *(section hidden entirely)* | | | | |
+
+`src/features/users/segments.ts` is the single source of truth for that matrix.
+The sidebar submenu, the route guards and the API layer all read it, so they
+cannot drift; adding a segment there wires it everywhere but its route file.
+
+### Contract notes
+
+Three things about the backend that the code works around, each verified against
+a running server:
+
+- **`page` is 0-based and the size param is `limit`.** `src/lib/pagination.ts`
+  adapts this (`toBackendPageParams`, `backendPaginatedSchema`) so the tables and
+  `TablePagination` keep their 1-based `page`/`pageSize`.
+- **Array params must be repeat-format.** `?role=A&role=B` filters;
+  axios's default `?role[]=A` lands under a key the backend ignores and it
+  answers **200 with every user unfiltered** — an admin would silently be shown
+  the super admins. `src/lib/api-client.ts` sets `paramsSerializer: { indexes: null }`
+  to prevent this.
+- **`status` filtering on `/users` is dead code** server-side, and the list has no
+  `orderBy`, so paging is not stable across pages. No status filter is offered on
+  the `/users`-backed segments.
+
+### ⚠️ Known backend gap — STAFF gets 403
+
+The UI implements the matrix above, but a `STAFF` account is currently refused by
+all three endpoints:
+
+```
+STAFF   /users=403   /customers=403   /professionals=403
+ADMIN   /users=200   /customers=200   /professionals=200
+```
+
+So the Customers and Professionals segments show a permission error for staff
+until the backend changes. The two failures have different causes:
+
+1. `GET /v1/api/users` is CASL-gated on `manage User`, and abilities come from the
+   `permissions` JSONB column rather than the role. Staff rows carry
+   `[{"action":"create","subject":"User"}]`, which does not satisfy `manage`.
+   The clean fix is to change the GET handler to `action: 'read'` and grant staff
+   `read User` — granting `manage` would also hand them POST/PATCH/DELETE.
+2. `GET /v1/api/customers` and `/professionals` are `@AdminOnly()`, hard-coded to
+   `[ADMIN, SUPERADMIN, ADMIN_DEVELOPER]`. No permissions data opens these; the
+   list routes need `@Roles(...ADMIN_ROLES, RoleEnum.STAFF)`.
+
+### Not built yet
+
+Creating and editing users. `POST /v1/api/users` is multipart and requires
+`idNumber`, `phone`, `password` and `status` on top of name/email/role, so the
+template's old three-field invite dialog could only ever have worked against a
+mock; it was removed rather than left as a button that 400s.
+
 
 ## Pages
 
@@ -97,7 +155,7 @@ any of those URLs redirects to `/dashboard`.
 | `/services`      | `SUPERADMIN` | Placeholder list table                         |
 | `/requests`      | `SUPERADMIN` | Placeholder list table                         |
 | `/card-payments` | `SUPERADMIN` | Placeholder list table                         |
-| `/users`         | `SUPERADMIN` | User list, role badges, invite, delete         |
+| `/users/*`       | varies       | Five role segments — see "The Users section"  |
 | `/settings`      | any          | Read-only account details                      |
 
 Services, Requests and Card Payments are **placeholders**: the columns and mock
@@ -252,7 +310,8 @@ src/
       services.tsx              # SUPERADMIN only
       requests.tsx              # SUPERADMIN only
       card-payments.tsx         # SUPERADMIN only
-      users.tsx                 # SUPERADMIN only
+      users.tsx                 # layout for the Users section
+      users/                    # one route per role segment
       settings.tsx
 
   features/

@@ -18,7 +18,6 @@
     "check": "biome check --write .",
     "ci": "biome ci .",
     "test": "vitest run",
-    "test:live": "vitest run --config vitest.live.config.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
@@ -27,8 +26,8 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@fontsource-variable/cairo": "^5.3.0",
     "@fontsource-variable/geist": "^5.3.0",
-    "@fontsource-variable/noto-sans-arabic": "^5.3.0",
     "@hookform/resolvers": "^5.9.1",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query": "^5.102.2",

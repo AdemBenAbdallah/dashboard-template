@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
-@import "@fontsource-variable/noto-sans-arabic";
+@import "@fontsource-variable/cairo";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -86,7 +86,7 @@
 }
 
 html[dir="rtl"] {
-  --font-family-sans: "Noto Sans Arabic Variable", "Geist Variable", sans-serif;
+  --font-family-sans: "Cairo Variable", "Geist Variable", sans-serif;
 }
 
 .dark {

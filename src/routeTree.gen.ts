@@ -18,6 +18,12 @@ import { Route as ProtectedRequestsRouteImport } from "./routes/_protected/reque
 import { Route as ProtectedServicesRouteImport } from "./routes/_protected/services"
 import { Route as ProtectedSettingsRouteImport } from "./routes/_protected/settings"
 import { Route as ProtectedUsersRouteImport } from "./routes/_protected/users"
+import { Route as ProtectedUsersIndexRouteImport } from "./routes/_protected/users/index"
+import { Route as ProtectedUsersAdminsRouteImport } from "./routes/_protected/users/admins"
+import { Route as ProtectedUsersCustomersRouteImport } from "./routes/_protected/users/customers"
+import { Route as ProtectedUsersProfessionalsRouteImport } from "./routes/_protected/users/professionals"
+import { Route as ProtectedUsersStaffRouteImport } from "./routes/_protected/users/staff"
+import { Route as ProtectedUsersSuperAdminsRouteImport } from "./routes/_protected/users/super-admins"
 
 const IndexRoute = IndexRouteImport.update({
   id: "/",
@@ -63,6 +69,38 @@ const ProtectedUsersRoute = ProtectedUsersRouteImport.update({
   path: "/users",
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedUsersIndexRoute = ProtectedUsersIndexRouteImport.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => ProtectedUsersRoute,
+} as any)
+const ProtectedUsersAdminsRoute = ProtectedUsersAdminsRouteImport.update({
+  id: "/admins",
+  path: "/admins",
+  getParentRoute: () => ProtectedUsersRoute,
+} as any)
+const ProtectedUsersCustomersRoute = ProtectedUsersCustomersRouteImport.update({
+  id: "/customers",
+  path: "/customers",
+  getParentRoute: () => ProtectedUsersRoute,
+} as any)
+const ProtectedUsersProfessionalsRoute =
+  ProtectedUsersProfessionalsRouteImport.update({
+    id: "/professionals",
+    path: "/professionals",
+    getParentRoute: () => ProtectedUsersRoute,
+  } as any)
+const ProtectedUsersStaffRoute = ProtectedUsersStaffRouteImport.update({
+  id: "/staff",
+  path: "/staff",
+  getParentRoute: () => ProtectedUsersRoute,
+} as any)
+const ProtectedUsersSuperAdminsRoute =
+  ProtectedUsersSuperAdminsRouteImport.update({
+    id: "/super-admins",
+    path: "/super-admins",
+    getParentRoute: () => ProtectedUsersRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
@@ -72,7 +110,13 @@ export interface FileRoutesByFullPath {
   "/requests": typeof ProtectedRequestsRoute
   "/services": typeof ProtectedServicesRoute
   "/settings": typeof ProtectedSettingsRoute
-  "/users": typeof ProtectedUsersRoute
+  "/users": typeof ProtectedUsersRouteWithChildren
+  "/users/admins": typeof ProtectedUsersAdminsRoute
+  "/users/customers": typeof ProtectedUsersCustomersRoute
+  "/users/professionals": typeof ProtectedUsersProfessionalsRoute
+  "/users/staff": typeof ProtectedUsersStaffRoute
+  "/users/super-admins": typeof ProtectedUsersSuperAdminsRoute
+  "/users/": typeof ProtectedUsersIndexRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
@@ -82,7 +126,12 @@ export interface FileRoutesByTo {
   "/requests": typeof ProtectedRequestsRoute
   "/services": typeof ProtectedServicesRoute
   "/settings": typeof ProtectedSettingsRoute
-  "/users": typeof ProtectedUsersRoute
+  "/users/admins": typeof ProtectedUsersAdminsRoute
+  "/users/customers": typeof ProtectedUsersCustomersRoute
+  "/users/professionals": typeof ProtectedUsersProfessionalsRoute
+  "/users/staff": typeof ProtectedUsersStaffRoute
+  "/users/super-admins": typeof ProtectedUsersSuperAdminsRoute
+  "/users": typeof ProtectedUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -94,7 +143,13 @@ export interface FileRoutesById {
   "/_protected/requests": typeof ProtectedRequestsRoute
   "/_protected/services": typeof ProtectedServicesRoute
   "/_protected/settings": typeof ProtectedSettingsRoute
-  "/_protected/users": typeof ProtectedUsersRoute
+  "/_protected/users": typeof ProtectedUsersRouteWithChildren
+  "/_protected/users/admins": typeof ProtectedUsersAdminsRoute
+  "/_protected/users/customers": typeof ProtectedUsersCustomersRoute
+  "/_protected/users/professionals": typeof ProtectedUsersProfessionalsRoute
+  "/_protected/users/staff": typeof ProtectedUsersStaffRoute
+  "/_protected/users/super-admins": typeof ProtectedUsersSuperAdminsRoute
+  "/_protected/users/": typeof ProtectedUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +162,12 @@ export interface FileRouteTypes {
     | "/services"
     | "/settings"
     | "/users"
+    | "/users/admins"
+    | "/users/customers"
+    | "/users/professionals"
+    | "/users/staff"
+    | "/users/super-admins"
+    | "/users/"
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
@@ -116,6 +177,11 @@ export interface FileRouteTypes {
     | "/requests"
     | "/services"
     | "/settings"
+    | "/users/admins"
+    | "/users/customers"
+    | "/users/professionals"
+    | "/users/staff"
+    | "/users/super-admins"
     | "/users"
   id:
     | "__root__"
@@ -128,6 +194,12 @@ export interface FileRouteTypes {
     | "/_protected/services"
     | "/_protected/settings"
     | "/_protected/users"
+    | "/_protected/users/admins"
+    | "/_protected/users/customers"
+    | "/_protected/users/professionals"
+    | "/_protected/users/staff"
+    | "/_protected/users/super-admins"
+    | "/_protected/users/"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -201,8 +273,72 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof ProtectedUsersRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    "/_protected/users/": {
+      id: "/_protected/users/"
+      path: "/"
+      fullPath: "/users/"
+      preLoaderRoute: typeof ProtectedUsersIndexRouteImport
+      parentRoute: typeof ProtectedUsersRoute
+    }
+    "/_protected/users/admins": {
+      id: "/_protected/users/admins"
+      path: "/admins"
+      fullPath: "/users/admins"
+      preLoaderRoute: typeof ProtectedUsersAdminsRouteImport
+      parentRoute: typeof ProtectedUsersRoute
+    }
+    "/_protected/users/customers": {
+      id: "/_protected/users/customers"
+      path: "/customers"
+      fullPath: "/users/customers"
+      preLoaderRoute: typeof ProtectedUsersCustomersRouteImport
+      parentRoute: typeof ProtectedUsersRoute
+    }
+    "/_protected/users/professionals": {
+      id: "/_protected/users/professionals"
+      path: "/professionals"
+      fullPath: "/users/professionals"
+      preLoaderRoute: typeof ProtectedUsersProfessionalsRouteImport
+      parentRoute: typeof ProtectedUsersRoute
+    }
+    "/_protected/users/staff": {
+      id: "/_protected/users/staff"
+      path: "/staff"
+      fullPath: "/users/staff"
+      preLoaderRoute: typeof ProtectedUsersStaffRouteImport
+      parentRoute: typeof ProtectedUsersRoute
+    }
+    "/_protected/users/super-admins": {
+      id: "/_protected/users/super-admins"
+      path: "/super-admins"
+      fullPath: "/users/super-admins"
+      preLoaderRoute: typeof ProtectedUsersSuperAdminsRouteImport
+      parentRoute: typeof ProtectedUsersRoute
+    }
   }
 }
+
+interface ProtectedUsersRouteChildren {
+  ProtectedUsersAdminsRoute: typeof ProtectedUsersAdminsRoute
+  ProtectedUsersCustomersRoute: typeof ProtectedUsersCustomersRoute
+  ProtectedUsersProfessionalsRoute: typeof ProtectedUsersProfessionalsRoute
+  ProtectedUsersStaffRoute: typeof ProtectedUsersStaffRoute
+  ProtectedUsersSuperAdminsRoute: typeof ProtectedUsersSuperAdminsRoute
+  ProtectedUsersIndexRoute: typeof ProtectedUsersIndexRoute
+}
+
+const ProtectedUsersRouteChildren: ProtectedUsersRouteChildren = {
+  ProtectedUsersAdminsRoute: ProtectedUsersAdminsRoute,
+  ProtectedUsersCustomersRoute: ProtectedUsersCustomersRoute,
+  ProtectedUsersProfessionalsRoute: ProtectedUsersProfessionalsRoute,
+  ProtectedUsersStaffRoute: ProtectedUsersStaffRoute,
+  ProtectedUsersSuperAdminsRoute: ProtectedUsersSuperAdminsRoute,
+  ProtectedUsersIndexRoute: ProtectedUsersIndexRoute,
+}
+
+const ProtectedUsersRouteWithChildren = ProtectedUsersRoute._addFileChildren(
+  ProtectedUsersRouteChildren,
+)
 
 interface ProtectedRouteChildren {
   ProtectedCardPaymentsRoute: typeof ProtectedCardPaymentsRoute
@@ -210,7 +346,7 @@ interface ProtectedRouteChildren {
   ProtectedRequestsRoute: typeof ProtectedRequestsRoute
   ProtectedServicesRoute: typeof ProtectedServicesRoute
   ProtectedSettingsRoute: typeof ProtectedSettingsRoute
-  ProtectedUsersRoute: typeof ProtectedUsersRoute
+  ProtectedUsersRoute: typeof ProtectedUsersRouteWithChildren
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
@@ -219,7 +355,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedRequestsRoute: ProtectedRequestsRoute,
   ProtectedServicesRoute: ProtectedServicesRoute,
   ProtectedSettingsRoute: ProtectedSettingsRoute,
-  ProtectedUsersRoute: ProtectedUsersRoute,
+  ProtectedUsersRoute: ProtectedUsersRouteWithChildren,
 }
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(

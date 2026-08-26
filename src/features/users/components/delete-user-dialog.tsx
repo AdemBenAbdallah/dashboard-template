@@ -9,49 +9,58 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import type { User } from "@/features/auth/schemas"
-import { useDeleteUser } from "../hooks/use-users"
+import { useDeleteSegmentRow } from "../hooks/use-users"
+import type { UserSegmentId } from "../segments"
+
+/** The minimum a row needs to be deletable, whatever segment it came from. */
+export interface DeletableRow {
+  id: string
+  name: string
+  email: string
+}
 
 interface DeleteUserDialogProps {
-  /** The user pending deletion, or `null` when the dialog is closed. */
-  user: User | null
+  /** The row pending deletion, or `null` when the dialog is closed. */
+  row: DeletableRow | null
+  segmentId: UserSegmentId
   onOpenChange: (open: boolean) => void
 }
 
 export function DeleteUserDialog({
-  user,
+  row,
+  segmentId,
   onOpenChange,
 }: DeleteUserDialogProps) {
   const { t } = useTranslation()
-  const deleteUser = useDeleteUser()
+  const deleteRow = useDeleteSegmentRow(segmentId)
 
   return (
-    <AlertDialog open={user !== null} onOpenChange={onOpenChange}>
+    <AlertDialog open={row !== null} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {t("users.delete.title", { name: user?.name })}
+            {t("users.delete.title", { name: row?.name })}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            {t("users.delete.description", { email: user?.email })}
+            {t("users.delete.description", { email: row?.email })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteUser.isPending}>
+          <AlertDialogCancel disabled={deleteRow.isPending}>
             {t("common.cancel")}
           </AlertDialogCancel>
           <AlertDialogAction
-            disabled={deleteUser.isPending}
+            disabled={deleteRow.isPending}
             onClick={(event) => {
               // Keep the dialog open until the request settles.
               event.preventDefault()
-              if (!user) return
-              deleteUser.mutate(user.id, {
+              if (!row) return
+              deleteRow.mutate(row.id, {
                 onSettled: () => onOpenChange(false),
               })
             }}
           >
-            {deleteUser.isPending
+            {deleteRow.isPending
               ? t("users.delete.confirming")
               : t("users.delete.confirm")}
           </AlertDialogAction>

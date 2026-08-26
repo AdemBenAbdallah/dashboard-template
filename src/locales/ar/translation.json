@@ -236,37 +236,53 @@
     "empty": "لا توجد دفعات بطاقة حتى الآن."
   },
   "users": {
-    "heading": "أعضاء الفريق",
-    "description": "كل من يملك صلاحية الوصول إلى مساحة العمل هذه.",
+    "heading": "المستخدمون",
+    "description": "جميع المستخدمين في النظام، مُصنَّفين حسب الدور.",
+    "searchLabel": "البحث عن مستخدمين",
+    "searchPlaceholder": "ابحث بالاسم أو البريد أو الهاتف…",
+    "empty": "لا يوجد مستخدمون هنا بعد.",
+    "loadError": "تعذّر تحميل هذه القائمة.",
+    "deleteAction": "حذف {{name}}",
+    "cannotDeleteSelf": "لا يمكنك حذف حسابك الخاص",
+    "segments": {
+      "label": "مجموعات المستخدمين",
+      "superAdmins": "المديرون العامون",
+      "admins": "المديرون",
+      "staff": "الموظفون",
+      "customers": "العملاء",
+      "professionals": "المهنيون"
+    },
     "columns": {
       "name": "الاسم",
       "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
       "role": "الدور",
-      "added": "تاريخ الإضافة"
+      "status": "الحالة",
+      "added": "تاريخ الإضافة",
+      "company": "الشركة",
+      "siret": "السجل التجاري",
+      "tools": "الأدوات"
     },
-    "empty": "لا يوجد مستخدمون حتى الآن.",
-    "deleteAction": "حذف {{name}}",
-    "cannotDeleteSelf": "لا يمكنك حذف حسابك الخاص",
-    "invite": {
-      "trigger": "دعوة مستخدم",
-      "title": "دعوة مستخدم",
-      "description": "سيصلهم بريد إلكتروني يحتوي على رابط لتعيين كلمة المرور.",
-      "nameLabel": "الاسم",
-      "namePlaceholder": "Ada Lovelace",
-      "emailLabel": "البريد الإلكتروني",
-      "emailPlaceholder": "ada@example.com",
-      "roleLabel": "الدور",
-      "rolePlaceholder": "اختر دورًا",
-      "submit": "إرسال الدعوة",
-      "submitting": "جارٍ الإرسال…",
-      "emailInvalid": "أدخل بريدًا إلكترونيًا صالحًا.",
-      "nameTooShort": "يجب أن يتكوّن الاسم من حرفين على الأقل.",
-      "toastSuccess": "تم إرسال الدعوة إلى {{email}}",
-      "toastError": "تعذّر إرسال الدعوة."
+    "status": {
+      "ACTIVE": "نشط",
+      "INACTIVE": "بانتظار الموافقة",
+      "BLOCKED": "محظور",
+      "DELETED": "محذوف"
+    },
+    "tools": {
+      "own": "أدوات خاصة",
+      "iris": "أدوات إيريس"
+    },
+    "approve": {
+      "approveAction": "الموافقة على {{name}}",
+      "revokeAction": "إلغاء صلاحية {{name}}",
+      "toastApproved": "تمت الموافقة على المهني",
+      "toastRevoked": "تم إلغاء صلاحية المهني",
+      "toastError": "تعذّر تحديث الحساب."
     },
     "delete": {
       "title": "حذف {{name}}؟",
-      "description": "سيؤدي هذا إلى إزالة {{email}} وإلغاء صلاحية وصوله فورًا. لا يمكن التراجع عن هذا الإجراء.",
+      "description": "سيؤدي هذا إلى إزالة {{email}} وإلغاء وصوله فورًا. لا يمكن التراجع عن هذا الإجراء.",
       "confirm": "حذف المستخدم",
       "confirming": "جارٍ الحذف…",
       "toastSuccess": "تم حذف المستخدم",

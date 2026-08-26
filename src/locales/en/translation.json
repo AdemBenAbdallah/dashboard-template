@@ -232,33 +232,49 @@
     "empty": "No card payments yet."
   },
   "users": {
-    "heading": "Team members",
-    "description": "Everyone with access to this workspace.",
+    "heading": "Users",
+    "description": "Everyone in the system, grouped by role.",
+    "searchLabel": "Search users",
+    "searchPlaceholder": "Search by name, email or phone…",
+    "empty": "No users here yet.",
+    "loadError": "Could not load this list.",
+    "deleteAction": "Delete {{name}}",
+    "cannotDeleteSelf": "You cannot delete your own account",
+    "segments": {
+      "label": "User groups",
+      "superAdmins": "Super admins",
+      "admins": "Admins",
+      "staff": "Staff",
+      "customers": "Customers",
+      "professionals": "Professionals"
+    },
     "columns": {
       "name": "Name",
       "email": "Email",
+      "phone": "Phone",
       "role": "Role",
-      "added": "Added"
+      "status": "Status",
+      "added": "Added",
+      "company": "Company",
+      "siret": "SIRET",
+      "tools": "Tools"
     },
-    "empty": "No users yet.",
-    "deleteAction": "Delete {{name}}",
-    "cannotDeleteSelf": "You cannot delete your own account",
-    "invite": {
-      "trigger": "Invite user",
-      "title": "Invite a user",
-      "description": "They'll receive an email with a link to set their password.",
-      "nameLabel": "Name",
-      "namePlaceholder": "Ada Lovelace",
-      "emailLabel": "Email",
-      "emailPlaceholder": "ada@example.com",
-      "roleLabel": "Role",
-      "rolePlaceholder": "Select a role",
-      "submit": "Send invite",
-      "submitting": "Sending…",
-      "emailInvalid": "Enter a valid email address.",
-      "nameTooShort": "Name must be at least 2 characters.",
-      "toastSuccess": "Invitation sent to {{email}}",
-      "toastError": "Could not send the invitation."
+    "status": {
+      "ACTIVE": "Active",
+      "INACTIVE": "Awaiting approval",
+      "BLOCKED": "Blocked",
+      "DELETED": "Deleted"
+    },
+    "tools": {
+      "own": "Own tools",
+      "iris": "Iris tools"
+    },
+    "approve": {
+      "approveAction": "Approve {{name}}",
+      "revokeAction": "Revoke {{name}}",
+      "toastApproved": "Professional approved",
+      "toastRevoked": "Professional access revoked",
+      "toastError": "Could not update the account."
     },
     "delete": {
       "title": "Delete {{name}}?",

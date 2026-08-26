@@ -37,6 +37,8 @@ export function createTestQueryClient(): QueryClient {
  */
 export type SeededRole =
   | typeof ROLES.SUPERADMIN
+  | typeof ROLES.ADMIN_DEVELOPER
+  | typeof ROLES.ADMIN
   | typeof ROLES.STAFF
   | typeof ROLES.CUSTOMER
 
@@ -46,6 +48,11 @@ export const TEST_CREDENTIALS: Record<
   { email: string; password: string }
 > = {
   [ROLES.SUPERADMIN]: { email: "admin@acme.test", password: "password123" },
+  [ROLES.ADMIN_DEVELOPER]: {
+    email: "devadmin@acme.test",
+    password: "password123",
+  },
+  [ROLES.ADMIN]: { email: "frankie@acme.test", password: "password123" },
   [ROLES.STAFF]: { email: "user@acme.test", password: "password123" },
   [ROLES.CUSTOMER]: { email: "customer@acme.test", password: "password123" },
 }

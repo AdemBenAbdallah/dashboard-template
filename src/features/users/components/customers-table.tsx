@@ -10,38 +10,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { User } from "@/features/auth/schemas"
 import { useLocaleStore } from "@/features/locale/store"
 import { formatDate } from "@/lib/utils"
+import type { CustomerRow } from "../schemas"
 import { AccountStatusBadge } from "./account-status-badge"
-import { RoleBadge } from "./role-badge"
 import { UserCell } from "./user-cell"
 
-export const USER_COLUMN_KEYS = [
+export const CUSTOMER_COLUMN_KEYS = [
   "users.columns.name",
   "users.columns.email",
   "users.columns.phone",
-  "users.columns.role",
   "users.columns.status",
   "users.columns.added",
   "",
 ] as const
 
-interface UsersTableProps {
-  users: readonly User[]
-  onDelete: (user: User) => void
-  /** The signed-in user's own id — deleting yourself is disabled. */
-  currentUserId: string | undefined
-  canDelete: boolean
-}
-
-/** The table behind the Super admins, Admins and Staff segments. */
-export function UsersTable({
-  users,
+export function CustomersTable({
+  customers,
   onDelete,
-  currentUserId,
   canDelete,
-}: UsersTableProps) {
+}: {
+  customers: readonly CustomerRow[]
+  onDelete: (row: CustomerRow) => void
+  canDelete: boolean
+}) {
   const { t } = useTranslation()
   const locale = useLocaleStore((state) => state.locale)
 
@@ -50,11 +42,11 @@ export function UsersTable({
       <Table>
         <TableHeader className="bg-muted">
           <TableRow>
-            {USER_COLUMN_KEYS.map((key, index) => (
+            {CUSTOMER_COLUMN_KEYS.map((key, index) => (
               <TableHead
                 key={key || "actions"}
                 className={
-                  index === USER_COLUMN_KEYS.length - 1 ? "w-12" : undefined
+                  index === CUSTOMER_COLUMN_KEYS.length - 1 ? "w-12" : undefined
                 }
               >
                 {key ? t(key) : null}
@@ -63,49 +55,42 @@ export function UsersTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users.length === 0 ? (
+          {customers.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={USER_COLUMN_KEYS.length}
+                colSpan={CUSTOMER_COLUMN_KEYS.length}
                 className="h-24 text-center text-muted-foreground"
               >
                 {t("users.empty")}
               </TableCell>
             </TableRow>
           ) : (
-            users.map((user) => (
-              <TableRow key={user.id}>
+            customers.map((row) => (
+              <TableRow key={row.id}>
                 <TableCell>
-                  <UserCell user={user} />
+                  <UserCell user={row.user} />
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  <Ltr>{user.email}</Ltr>
+                  <Ltr>{row.user.email}</Ltr>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {user.phone ? <Ltr>{user.phone}</Ltr> : "—"}
+                  {row.user.phone ? <Ltr>{row.user.phone}</Ltr> : "—"}
                 </TableCell>
                 <TableCell>
-                  <RoleBadge role={user.role} />
-                </TableCell>
-                <TableCell>
-                  <AccountStatusBadge status={user.status} />
+                  <AccountStatusBadge status={row.user.status} />
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {formatDate(user.createdAt, locale)}
+                  {formatDate(row.createdAt, locale)}
                 </TableCell>
                 <TableCell>
                   {canDelete ? (
                     <Button
                       variant="ghost"
                       size="icon"
-                      disabled={user.id === currentUserId}
-                      title={
-                        user.id === currentUserId
-                          ? t("users.cannotDeleteSelf")
-                          : undefined
-                      }
-                      aria-label={t("users.deleteAction", { name: user.name })}
-                      onClick={() => onDelete(user)}
+                      aria-label={t("users.deleteAction", {
+                        name: row.user.name,
+                      })}
+                      onClick={() => onDelete(row)}
                     >
                       <Trash2Icon className="size-4" />
                     </Button>

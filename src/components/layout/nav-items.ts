@@ -9,15 +9,26 @@ import {
   WrenchIcon,
 } from "lucide-react"
 import { ROLES, type Role } from "@/features/auth/roles"
+import { USER_SEGMENTS } from "@/features/users/segments"
 
-export interface NavItem {
+export interface NavSubItem {
   /** A translation key, not display text — render it through `t()`. */
   title: string
   /** Typed against the generated route tree — a typo is a compile error. */
   to: LinkProps["to"]
-  icon: LucideIcon
-  /** Omit to show the item to every signed-in role. */
+  /** Omit to show the sub-item to every signed-in role. */
   roles?: readonly Role[]
+}
+
+export interface NavItem extends NavSubItem {
+  icon: LucideIcon
+  /**
+   * Renders the entry as a collapsible group instead of a link.
+   *
+   * A parent whose children are all filtered out is dropped entirely, which is
+   * what hides the Users section from a role with no segments.
+   */
+  children?: readonly NavSubItem[]
 }
 
 /**
@@ -56,7 +67,13 @@ export const NAV_ITEMS: readonly NavItem[] = [
     title: "nav.users",
     to: "/users",
     icon: UsersIcon,
-    roles: [ROLES.SUPERADMIN],
+    // Derived from the segment matrix so the sidebar can never disagree with
+    // the route guards about who sees what.
+    children: USER_SEGMENTS.map((segment) => ({
+      title: segment.titleKey,
+      to: segment.to,
+      roles: segment.viewers,
+    })),
   },
   {
     title: "nav.settings",

@@ -73,4 +73,90 @@ describe("left-to-right runs are bidi-isolated", () => {
     const delta = await screen.findByText("-20%")
     expect(delta.closest("bdi")).toHaveAttribute("dir", "ltr")
   })
+
+  it("wraps a phone number in the users table", async () => {
+    useLocaleStore.getState().setLocale("ar")
+
+    await renderRoute("/users/super-admins", { as: ROLES.SUPERADMIN })
+
+    // Without the isolate this renders as `966500000001+`.
+    const phone = await screen.findByText("+966500000001")
+    expect(phone.tagName).toBe("BDI")
+    expect(phone).toHaveAttribute("dir", "ltr")
+  })
+})
+
+/**
+ * Tables must not pin alignment to a physical side.
+ *
+ * `TableHead` shipped with `text-left`, which under `dir="rtl"` pulled every
+ * header to the left of its cell while the body cells followed the inherited
+ * direction and sat on the right — so the Arabic headers appeared shifted a
+ * column out of step with their data. jsdom does no layout, so the assertion is
+ * on the logical class, which is the thing that broke.
+ */
+describe("table alignment is direction-agnostic", () => {
+  it("aligns headers to the start, not the left", async () => {
+    useLocaleStore.getState().setLocale("ar")
+
+    await renderRoute("/users/super-admins", { as: ROLES.SUPERADMIN })
+
+    const header = (await screen.findAllByRole("columnheader"))[0]
+    expect(header.className).toContain("text-start")
+    expect(header.className).not.toContain("text-left")
+  })
+
+  it("renders the table headers in Arabic", async () => {
+    useLocaleStore.getState().setLocale("ar")
+
+    await renderRoute("/users/super-admins", { as: ROLES.SUPERADMIN })
+
+    const headers = (await screen.findAllByRole("columnheader")).map(
+      (cell) => cell.textContent,
+    )
+    expect(headers).toContain("الاسم")
+    expect(headers).toContain("البريد الإلكتروني")
+  })
+})
+
+/**
+ * Icons positioned inside a field must use a logical inset.
+ *
+ * `left-2.5` pins the search icon to the left of the box in every locale, so
+ * under RTL it lands on top of the Arabic placeholder while the text padding
+ * sits on the opposite side. `start-2.5` follows the direction.
+ */
+describe("field icons follow the locale direction", () => {
+  it("positions the search icon on the logical start edge", async () => {
+    useLocaleStore.getState().setLocale("ar")
+
+    await renderRoute("/users/super-admins", { as: ROLES.SUPERADMIN })
+
+    const search = await screen.findByRole("searchbox")
+    const icon = search.parentElement?.querySelector("svg")
+    expect(icon?.getAttribute("class")).toContain("start-")
+    expect(icon?.getAttribute("class")).not.toMatch(/\b(left|right)-/)
+    // The text padding has to move with it.
+    expect(search.className).toContain("ps-8")
+  })
+})
+
+/**
+ * Dates are rendered through `formatDate(value, locale)`. Omitting the second
+ * argument silently falls back to English, which is easy to do and invisible
+ * until someone switches locale.
+ */
+describe("dates follow the locale", () => {
+  it("formats the users table dates in Arabic", async () => {
+    useLocaleStore.getState().setLocale("ar")
+
+    await renderRoute("/users/super-admins", { as: ROLES.SUPERADMIN })
+
+    const table = await screen.findByRole("table")
+    // `toLocaleDateString("ar", …)` yields an Arabic month name; the English
+    // fallback would read "Jan"/"Feb"/…
+    expect(table.textContent).not.toMatch(
+      /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/,
+    )
+  })
 })

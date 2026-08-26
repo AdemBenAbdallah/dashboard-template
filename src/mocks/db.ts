@@ -103,6 +103,36 @@ const SEED_ACCOUNTS: readonly SeedAccount[] = [
     lastLogin: null,
   },
   {
+    pubkey: "usr_006",
+    email: "frankie@acme.test",
+    password: "password123",
+    firstName: "Frankie",
+    lastName: "Osei",
+    role: ROLES.ADMIN,
+    image: null,
+    phone: "+966500000006",
+    status: "ACTIVE",
+    emailVerifiedAt: "2024-02-20T09:00:00.000Z",
+    phoneVerifiedAt: "2024-02-20T09:00:00.000Z",
+    createdAt: "2024-02-19T08:15:00.000Z",
+    lastLogin: null,
+  },
+  {
+    pubkey: "usr_007",
+    email: "devadmin@acme.test",
+    password: "password123",
+    firstName: "Gale",
+    lastName: "Sunderland",
+    role: ROLES.ADMIN_DEVELOPER,
+    image: null,
+    phone: "+966500000007",
+    status: "ACTIVE",
+    emailVerifiedAt: "2024-03-20T09:00:00.000Z",
+    phoneVerifiedAt: "2024-03-20T09:00:00.000Z",
+    createdAt: "2024-03-19T08:15:00.000Z",
+    lastLogin: null,
+  },
+  {
     // Authenticates successfully but has no business in the dashboard — this
     // is what the DASHBOARD_ROLES check at login exists for.
     pubkey: "usr_005",
@@ -121,8 +151,149 @@ const SEED_ACCOUNTS: readonly SeedAccount[] = [
   },
 ]
 
-export const accounts: SeedAccount[] = SEED_ACCOUNTS.map((account) => ({
-  ...account,
+/**
+ * Every seeded account, dashboard and app roles alike.
+ *
+ * The customer and professional accounts are declared further down, so this is
+ * assembled after them — see `ALL_SEED_ACCOUNTS`.
+ */
+export const accounts: SeedAccount[] = []
+
+/**
+ * Customer and professional profile rows.
+ *
+ * The real endpoints return a profile wrapping the account under `user`, not a
+ * flat user, so the mock stores them the same way — otherwise the schemas that
+ * flatten those wrappers would never be exercised.
+ */
+export interface SeedProfile {
+  pubkey: string
+  /** `pubkey` of the account in `accounts`. */
+  userPubkey: string
+  createdAt: string
+  note?: string | null
+  hasTools?: boolean
+  company?: string | null
+  siret?: string | null
+  area?: { pubkey: string; name: string } | null
+}
+
+const SEED_CUSTOMER_ACCOUNTS: readonly SeedAccount[] = [
+  {
+    pubkey: "usr_101",
+    email: "hana@example.test",
+    password: "password123",
+    firstName: "Hana",
+    lastName: "Aziz",
+    role: ROLES.CUSTOMER,
+    image: null,
+    phone: "+966500000101",
+    status: "ACTIVE",
+    emailVerifiedAt: "2024-04-02T09:00:00.000Z",
+    phoneVerifiedAt: "2024-04-02T09:00:00.000Z",
+    createdAt: "2024-04-01T09:00:00.000Z",
+    lastLogin: null,
+  },
+  {
+    pubkey: "usr_102",
+    email: "omar@example.test",
+    password: "password123",
+    firstName: "Omar",
+    lastName: "Haddad",
+    role: ROLES.CUSTOMER,
+    image: null,
+    phone: "+966500000102",
+    status: "BLOCKED",
+    emailVerifiedAt: "2024-05-02T09:00:00.000Z",
+    phoneVerifiedAt: null,
+    createdAt: "2024-05-01T09:00:00.000Z",
+    lastLogin: null,
+  },
+]
+
+const SEED_PROFESSIONAL_ACCOUNTS: readonly SeedAccount[] = [
+  {
+    pubkey: "usr_201",
+    email: "yusuf@pro.test",
+    password: "password123",
+    firstName: "Yusuf",
+    lastName: "Karim",
+    role: ROLES.PROFESSIONAL,
+    image: null,
+    phone: "+966500000201",
+    status: "ACTIVE",
+    emailVerifiedAt: "2024-02-02T09:00:00.000Z",
+    phoneVerifiedAt: "2024-02-02T09:00:00.000Z",
+    createdAt: "2024-02-01T09:00:00.000Z",
+    lastLogin: null,
+  },
+  {
+    // Self-registered and awaiting approval — the state the approve action exists for.
+    pubkey: "usr_202",
+    email: "layla@pro.test",
+    password: "password123",
+    firstName: "Layla",
+    lastName: "Nasser",
+    role: ROLES.PROFESSIONAL,
+    image: null,
+    phone: "+966500000202",
+    status: "INACTIVE",
+    emailVerifiedAt: "2024-06-02T09:00:00.000Z",
+    phoneVerifiedAt: "2024-06-02T09:00:00.000Z",
+    createdAt: "2024-06-01T09:00:00.000Z",
+    lastLogin: null,
+  },
+]
+
+const SEED_CUSTOMERS: readonly SeedProfile[] = [
+  {
+    pubkey: "cus_001",
+    userPubkey: "usr_101",
+    createdAt: "2024-04-01T09:00:00.000Z",
+    note: null,
+  },
+  {
+    pubkey: "cus_002",
+    userPubkey: "usr_102",
+    createdAt: "2024-05-01T09:00:00.000Z",
+    note: null,
+  },
+]
+
+const SEED_PROFESSIONALS: readonly SeedProfile[] = [
+  {
+    pubkey: "pro_001",
+    userPubkey: "usr_201",
+    createdAt: "2024-02-01T09:00:00.000Z",
+    hasTools: true,
+    company: "Karim Maintenance",
+    siret: "80012345600017",
+    area: { pubkey: "area_01", name: "Riyadh North" },
+  },
+  {
+    pubkey: "pro_002",
+    userPubkey: "usr_202",
+    createdAt: "2024-06-01T09:00:00.000Z",
+    hasTools: false,
+    company: null,
+    siret: null,
+    area: null,
+  },
+]
+
+const ALL_SEED_ACCOUNTS: readonly SeedAccount[] = [
+  ...SEED_ACCOUNTS,
+  ...SEED_CUSTOMER_ACCOUNTS,
+  ...SEED_PROFESSIONAL_ACCOUNTS,
+]
+
+accounts.push(...ALL_SEED_ACCOUNTS.map((account) => ({ ...account })))
+
+export const customers: SeedProfile[] = SEED_CUSTOMERS.map((row) => ({
+  ...row,
+}))
+export const professionals: SeedProfile[] = SEED_PROFESSIONALS.map((row) => ({
+  ...row,
 }))
 
 /**
@@ -274,6 +445,37 @@ export function addAccount(input: {
   return account
 }
 
+/** Joins a profile row to its account, as the real `include: { user: … }` does. */
+export function withUser(row: SeedProfile) {
+  const account = accounts.find(
+    (candidate) => candidate.pubkey === row.userPubkey,
+  )
+  if (!account) return null
+  const { userPubkey: _userPubkey, ...profile } = row
+  return { ...profile, user: toPublicUser(account) }
+}
+
+/** Sets an account's status — what `/professionals/:pubkey/approve` really does. */
+export function setAccountStatus(
+  userPubkey: string,
+  status: SeedAccount["status"],
+): boolean {
+  const account = accounts.find((candidate) => candidate.pubkey === userPubkey)
+  if (!account) return false
+  account.status = status
+  return true
+}
+
+export function removeProfile(
+  collection: SeedProfile[],
+  pubkey: string,
+): boolean {
+  const index = collection.findIndex((row) => row.pubkey === pubkey)
+  if (index === -1) return false
+  collection.splice(index, 1)
+  return true
+}
+
 export function removeAccount(pubkey: string): boolean {
   const index = accounts.findIndex((account) => account.pubkey === pubkey)
   if (index === -1) return false
@@ -291,7 +493,11 @@ export function removeAccount(pubkey: string): boolean {
  */
 export function resetMockDb(): void {
   accounts.length = 0
-  accounts.push(...SEED_ACCOUNTS.map((account) => ({ ...account })))
+  accounts.push(...ALL_SEED_ACCOUNTS.map((account) => ({ ...account })))
+  customers.length = 0
+  customers.push(...SEED_CUSTOMERS.map((row) => ({ ...row })))
+  professionals.length = 0
+  professionals.push(...SEED_PROFESSIONALS.map((row) => ({ ...row })))
   accessTokens.clear()
   refreshTokens.clear()
   revokedTokens.clear()

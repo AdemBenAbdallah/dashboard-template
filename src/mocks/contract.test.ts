@@ -11,9 +11,11 @@ import {
 } from "@/features/dashboard/schemas"
 import { requestListSchema } from "@/features/requests/schemas"
 import { serviceListSchema } from "@/features/services/schemas"
-import { userListSchema } from "@/features/users/schemas"
+import { segmentQueries } from "@/features/users/api/users-api"
+import { USER_SEGMENTS } from "@/features/users/segments"
 import { apiClient } from "@/lib/api-client"
-import { TEST_CREDENTIALS } from "@/test/utils"
+import { DEFAULT_PAGINATION } from "@/lib/pagination"
+import { createTestQueryClient, TEST_CREDENTIALS } from "@/test/utils"
 
 /**
  * Contract layer.
@@ -46,6 +48,39 @@ describe("auth endpoints", () => {
     const response = await apiClient.get("/auth/profile")
     expect(() => userSchema.parse(response.data)).not.toThrow()
     expect(response.data).not.toHaveProperty("password")
+  })
+})
+
+/**
+ * The users section speaks the backend's own envelope — `{data, total,
+ * currentPage}`, 0-based page, `limit` — rather than the template's, so it is
+ * checked through the same adapter the app uses.
+ */
+describe("users section endpoints", () => {
+  it.each(USER_SEGMENTS.map((segment) => segment.id))(
+    "the %s segment parses",
+    async (segmentId) => {
+      await asSuperadmin()
+      const page = await createTestQueryClient().fetchQuery(
+        segmentQueries.list(segmentId, DEFAULT_PAGINATION, ""),
+      )
+
+      expect(Array.isArray(page.rows)).toBe(true)
+      // Adapted back to the 1-based paging the UI uses.
+      expect(page.page).toBe(1)
+      expect(page.total).toBeGreaterThanOrEqual(page.rows.length)
+    },
+  )
+
+  it("filters by role, and does not leak other roles into a segment", async () => {
+    await asSuperadmin()
+    const page = await createTestQueryClient().fetchQuery(
+      segmentQueries.list("admins", DEFAULT_PAGINATION, ""),
+    )
+    const roles = page.rows.map((row) => ("role" in row ? row.role : null))
+
+    expect(roles.length).toBeGreaterThan(0)
+    expect(new Set(roles)).toEqual(new Set(["ADMIN"]))
   })
 })
 
@@ -83,7 +118,6 @@ describe("dashboard endpoints", () => {
 
 describe("list endpoints", () => {
   const cases = [
-    ["/users", userListSchema, "users"],
     ["/services", serviceListSchema, "rows"],
     ["/requests", requestListSchema, "rows"],
     ["/card-payments", cardPaymentListSchema, "rows"],

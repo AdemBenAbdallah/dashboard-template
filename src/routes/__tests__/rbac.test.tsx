@@ -13,17 +13,34 @@ import { currentPath, renderRoute, type SeededRole } from "@/test/utils"
  * Remember these guards are UX only. `mocks/handlers` enforces the same rules
  * server-side, and `contract.test.ts` plus the 403 cases below cover that.
  */
+const FULL = [ROLES.SUPERADMIN, ROLES.ADMIN_DEVELOPER] as const
+
 const PROTECTED_ROUTES = [
-  { path: "/dashboard", allowed: [ROLES.SUPERADMIN, ROLES.STAFF] },
-  { path: "/settings", allowed: [ROLES.SUPERADMIN, ROLES.STAFF] },
-  { path: "/users", allowed: [ROLES.SUPERADMIN] },
+  { path: "/dashboard", allowed: [...FULL, ROLES.ADMIN, ROLES.STAFF] },
+  { path: "/settings", allowed: [...FULL, ROLES.ADMIN, ROLES.STAFF] },
   { path: "/services", allowed: [ROLES.SUPERADMIN] },
   { path: "/requests", allowed: [ROLES.SUPERADMIN] },
   { path: "/card-payments", allowed: [ROLES.SUPERADMIN] },
+
+  // The Users section. `/users` itself only redirects, so it is reachable by
+  // anyone with at least one segment; each segment is checked on its own.
+  { path: "/users/super-admins", allowed: FULL },
+  { path: "/users/admins", allowed: FULL },
+  { path: "/users/staff", allowed: [...FULL, ROLES.ADMIN] },
+  { path: "/users/customers", allowed: [...FULL, ROLES.ADMIN, ROLES.STAFF] },
+  {
+    path: "/users/professionals",
+    allowed: [...FULL, ROLES.ADMIN, ROLES.STAFF],
+  },
 ] as const
 
 /** The dashboard roles the mock API has accounts for. */
-const ALL_ROLES: SeededRole[] = [ROLES.SUPERADMIN, ROLES.STAFF]
+const ALL_ROLES: SeededRole[] = [
+  ROLES.SUPERADMIN,
+  ROLES.ADMIN_DEVELOPER,
+  ROLES.ADMIN,
+  ROLES.STAFF,
+]
 
 describe("unauthenticated access", () => {
   it.each(PROTECTED_ROUTES.map((r) => r.path))(
@@ -35,8 +52,10 @@ describe("unauthenticated access", () => {
   )
 
   it("preserves the attempted URL in the redirect param", async () => {
-    const { router } = await renderRoute("/users")
-    expect(router.state.location.search).toMatchObject({ redirect: "/users" })
+    const { router } = await renderRoute("/users/admins")
+    expect(router.state.location.search).toMatchObject({
+      redirect: "/users/admins",
+    })
   })
 
   it("leaves /login reachable", async () => {
@@ -67,7 +86,7 @@ describe("role matrix", () => {
 })
 
 describe("sidebar navigation reflects the role", () => {
-  const RESTRICTED_LINKS = ["Users", "Services", "Requests", "Card Payments"]
+  const RESTRICTED_LINKS = ["Services", "Requests", "Card Payments"]
 
   it("shows every link to a superadmin", async () => {
     await renderRoute("/dashboard", { as: ROLES.SUPERADMIN })
@@ -76,6 +95,8 @@ describe("sidebar navigation reflects the role", () => {
         await screen.findByRole("link", { name: label }),
       ).toBeInTheDocument()
     }
+    // Users is a collapsible group, so it is a button rather than a link.
+    expect(screen.getByRole("button", { name: "Users" })).toBeVisible()
   })
 
   it("hides restricted links from a staff user", async () => {
@@ -91,6 +112,53 @@ describe("sidebar navigation reflects the role", () => {
       expect(screen.queryByRole("link", { name: label })).toBeNull()
     }
   })
+})
+
+/**
+ * The sidebar submenu is generated from the same matrix as the guards, so this
+ * checks the two cannot drift: a role sees exactly the segments it may reach.
+ */
+describe("users submenu", () => {
+  const SEGMENT_LABELS = {
+    [ROLES.SUPERADMIN]: [
+      "Super admins",
+      "Admins",
+      "Staff",
+      "Customers",
+      "Professionals",
+    ],
+    [ROLES.ADMIN]: ["Staff", "Customers", "Professionals"],
+    [ROLES.STAFF]: ["Customers", "Professionals"],
+  } as const
+
+  it.each(Object.keys(SEGMENT_LABELS) as (keyof typeof SEGMENT_LABELS)[])(
+    "%s sees only its own segments",
+    async (role) => {
+      const { user } = await renderRoute("/dashboard", { as: role })
+      const expected: readonly string[] = SEGMENT_LABELS[role]
+      const all = [
+        "Super admins",
+        "Admins",
+        "Staff",
+        "Customers",
+        "Professionals",
+      ]
+
+      // Expand the group so its sub-links are rendered. Radix drives this from
+      // pointer events, so a real user event is required, not `.click()`.
+      await user.click(await screen.findByRole("button", { name: "Users" }))
+      await screen.findByRole("link", { name: expected[0] })
+
+      for (const label of all) {
+        const link = screen.queryByRole("link", { name: label })
+        if (expected.includes(label)) {
+          expect(link, `${role} should see ${label}`).not.toBeNull()
+        } else {
+          expect(link, `${role} should not see ${label}`).toBeNull()
+        }
+      }
+    },
+  )
 })
 
 describe("unknown routes", () => {

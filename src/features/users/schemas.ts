@@ -1,24 +1,81 @@
 import { z } from "zod"
-import { DASHBOARD_ROLES } from "@/features/auth/roles"
 import { userSchema } from "@/features/auth/schemas"
-import { i18next } from "@/lib/i18n"
 
-/** A user row is the same shape as the signed-in user. */
-export const userListSchema = z.object({
-  users: z.array(userSchema),
-})
+/**
+ * A `/users` row is the same `UserDto` the auth layer already parses, so the
+ * schema — and its handling of the backend's inconsistent verification
+ * fields — is reused rather than restated.
+ */
+export { userSchema }
 
-export type UserList = z.infer<typeof userListSchema>
-
-/** A function so the messages pick up the active locale at validation time. */
-export function inviteUserSchema() {
-  return z.object({
-    email: z.email(i18next.t("users.invite.emailInvalid")),
-    name: z.string().min(2, i18next.t("users.invite.nameTooShort")),
-    // Invitations are for dashboard users only — never a customer or
-    // professional account, which are created through the mobile sign-up flows.
-    role: z.enum(DASHBOARD_ROLES),
+/**
+ * `/customers` and `/professionals` return *wrapper* rows: a profile record
+ * with the account nested under `user`. Flattened here so the tables see one
+ * predictable shape.
+ */
+const areaSchema = z
+  .object({
+    pubkey: z.string(),
+    name: z.unknown().nullish(),
   })
-}
+  .loose()
 
-export type InviteUserInput = z.infer<ReturnType<typeof inviteUserSchema>>
+const partnerCompanySchema = z
+  .object({
+    pubkey: z.string(),
+    name: z.string().nullish(),
+    isActive: z.boolean().nullish(),
+  })
+  .loose()
+
+export const customerRowSchema = z
+  .object({
+    pubkey: z.string(),
+    user: userSchema,
+    note: z.string().nullish(),
+    createdAt: z.iso.datetime().nullish(),
+  })
+  .loose()
+  .transform((row) => ({
+    id: row.pubkey,
+    user: row.user,
+    note: row.note ?? null,
+    createdAt: row.createdAt ?? row.user.createdAt,
+  }))
+
+export type CustomerRow = z.infer<typeof customerRowSchema>
+
+export const professionalRowSchema = z
+  .object({
+    pubkey: z.string(),
+    user: userSchema,
+    hasTools: z.boolean().nullish(),
+    company: z.string().nullish(),
+    siret: z.string().nullish(),
+    area: areaSchema.nullish(),
+    partnerCompany: partnerCompanySchema.nullish(),
+    createdAt: z.iso.datetime().nullish(),
+  })
+  .loose()
+  .transform((row) => ({
+    id: row.pubkey,
+    user: row.user,
+    hasTools: row.hasTools ?? false,
+    company: row.company ?? null,
+    siret: row.siret ?? null,
+    area: row.area ?? null,
+    partnerCompany: row.partnerCompany ?? null,
+    createdAt: row.createdAt ?? row.user.createdAt,
+  }))
+
+export type ProfessionalRow = z.infer<typeof professionalRowSchema>
+
+/*
+ * There is deliberately no invite/create schema here.
+ *
+ * `POST /v1/api/users` is multipart and requires `idNumber`, `phone`,
+ * `password` and `status` on top of name/email/role, so the template's old
+ * three-field invite form could only ever have worked against a mock. Creating
+ * users is a separate piece of work; the UI for it was removed rather than left
+ * as a button that 400s.
+ */
