@@ -1,0 +1,302 @@
+{
+  "common": {
+    "restoringSession": "جارٍ استعادة جلستك…",
+    "loading": "جارٍ التحميل…",
+    "placeholderListDescription": "قائمة مؤقتة — ستتغير الأعمدة عند تحديد الشكل النهائي.",
+    "emptyValue": "—",
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "more": "المزيد",
+    "toggleSidebar": "إظهار/إخفاء الشريط الجانبي"
+  },
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "services": "الخدمات",
+    "requests": "الطلبات",
+    "cardPayments": "دفعات البطاقة",
+    "users": "المستخدمون",
+    "settings": "الإعدادات"
+  },
+  "auth": {
+    "login": {
+      "title": "تسجيل الدخول",
+      "description": "أدخل بيانات الاعتماد للوصول إلى لوحة التحكم.",
+      "emailLabel": "البريد الإلكتروني",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "كلمة المرور",
+      "submit": "تسجيل الدخول",
+      "submitting": "جارٍ تسجيل الدخول…",
+      "emailInvalid": "أدخل بريدًا إلكترونيًا صالحًا.",
+      "passwordTooShort": "يجب أن تتكوّن كلمة المرور من 8 أحرف على الأقل.",
+      "genericError": "تعذّر تسجيل دخولك. حاول مرة أخرى.",
+      "noDashboardAccess": "لا يملك هذا الحساب صلاحية الوصول إلى لوحة التحكم."
+    },
+    "roles": {
+      "SUPERADMIN": "مدير عام",
+      "ADMIN_DEVELOPER": "مطوّر إداري",
+      "ADMIN": "مدير",
+      "HR": "الموارد البشرية",
+      "STAFF": "موظف",
+      "PROFESSIONAL": "مهني",
+      "CUSTOMER": "عميل"
+    },
+    "logout": "تسجيل الخروج",
+    "loggingOut": "جارٍ تسجيل الخروج…"
+  },
+  "theme": {
+    "label": "المظهر",
+    "light": "فاتح",
+    "dark": "داكن",
+    "system": "النظام"
+  },
+  "locale": {
+    "label": "اللغة",
+    "en": "English",
+    "ar": "العربية"
+  },
+  "table": {
+    "rowsPerPage": "الصفوف في الصفحة",
+    "pageOf": "الصفحة {{page}} من {{pages}}",
+    "firstPage": "الصفحة الأولى",
+    "previousPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية",
+    "lastPage": "الصفحة الأخيرة",
+    "rowCount_zero": "لا صفوف",
+    "rowCount_one": "صف واحد",
+    "rowCount_two": "صفّان",
+    "rowCount_few": "{{count}} صفوف",
+    "rowCount_many": "{{count}} صفًا",
+    "rowCount_other": "{{count}} صف"
+  },
+  "dashboard": {
+    "cards": {
+      "revenue": {
+        "label": "إجمالي الإيرادات",
+        "trendLabel": "ارتفاع خلال هذا الشهر",
+        "description": "الزوار خلال آخر 6 أشهر"
+      },
+      "customers": {
+        "label": "عملاء جدد",
+        "trendLabel": "انخفاض بنسبة 20% خلال هذه الفترة",
+        "description": "الاستقطاب يحتاج إلى متابعة"
+      },
+      "accounts": {
+        "label": "الحسابات النشطة",
+        "trendLabel": "معدل احتفاظ قوي بالمستخدمين",
+        "description": "التفاعل يتجاوز المستهدف"
+      },
+      "growth": {
+        "label": "معدل النمو",
+        "trendLabel": "تحسّن مطّرد في الأداء",
+        "description": "يحقق توقعات النمو"
+      }
+    },
+    "chart": {
+      "title": "إجمالي الزوار",
+      "descriptionFull": "الإجمالي خلال {{range}}",
+      "selectTimeRangeAriaLabel": "اختر نطاقًا زمنيًا"
+    },
+    "ranges": {
+      "90d": "آخر 3 أشهر",
+      "30d": "آخر 30 يومًا",
+      "7d": "آخر 7 أيام"
+    },
+    "table": {
+      "columns": {
+        "header": "العنوان",
+        "sectionType": "نوع القسم",
+        "status": "الحالة",
+        "target": "الهدف",
+        "limit": "الحد",
+        "reviewer": "المراجع"
+      },
+      "noResults": "لا توجد نتائج.",
+      "selectAll": "تحديد الكل",
+      "selectRow": "تحديد الصف",
+      "dragToReorder": "اسحب لإعادة الترتيب",
+      "openMenu": "فتح القائمة",
+      "columnsButton": "الأعمدة",
+      "addSection": "إضافة قسم",
+      "selectedCount": "تم تحديد {{selected}} من {{total}} صف.",
+      "goToFirstPage": "الانتقال إلى الصفحة الأولى",
+      "goToPreviousPage": "الانتقال إلى الصفحة السابقة",
+      "goToNextPage": "الانتقال إلى الصفحة التالية",
+      "goToLastPage": "الانتقال إلى الصفحة الأخيرة",
+      "savingRow": "جارٍ حفظ {{name}}",
+      "saved": "تم",
+      "saveFailed": "خطأ",
+      "assignReviewer": "تعيين مراجع",
+      "rowActions": {
+        "edit": "تعديل",
+        "makeCopy": "إنشاء نسخة",
+        "favorite": "إضافة إلى المفضلة",
+        "delete": "حذف"
+      },
+      "views": {
+        "label": "العرض",
+        "placeholder": "اختر عرضًا",
+        "outline": "المخطط",
+        "pastPerformance": "الأداء السابق",
+        "keyPersonnel": "الكوادر الرئيسية",
+        "focusDocuments": "مستندات التركيز"
+      },
+      "types": {
+        "coverPage": "صفحة الغلاف",
+        "tableOfContents": "جدول المحتويات",
+        "narrative": "سرد",
+        "technicalContent": "محتوى تقني",
+        "plainLanguage": "لغة مبسطة",
+        "research": "بحث",
+        "planning": "تخطيط",
+        "financial": "مالي",
+        "legal": "قانوني",
+        "visual": "محتوى مرئي"
+      },
+      "statuses": {
+        "done": "مكتمل",
+        "inProcess": "قيد التنفيذ"
+      },
+      "detail": {
+        "chartDescription": "إجمالي الزوار خلال آخر 6 أشهر",
+        "trend": "ارتفاع بنسبة 5.2% هذا الشهر",
+        "trendDescription": "إجمالي الزوار خلال آخر 6 أشهر. هذا نص تجريبي للتحقق من التنسيق، ويمتد على أكثر من سطر ليلتفّ داخل الحيز المتاح.",
+        "desktop": "سطح المكتب",
+        "mobile": "الهاتف",
+        "typeLabel": "النوع",
+        "typePlaceholder": "اختر نوعًا",
+        "statusPlaceholder": "اختر حالة",
+        "reviewerPlaceholder": "اختر مراجعًا",
+        "submit": "إرسال",
+        "close": "تم"
+      }
+    }
+  },
+  "services": {
+    "title": "الخدمات",
+    "columns": {
+      "service": "الخدمة",
+      "category": "الفئة",
+      "status": "الحالة",
+      "owner": "المالك",
+      "updated": "آخر تحديث"
+    },
+    "status": {
+      "operational": "تعمل بشكل طبيعي",
+      "degraded": "متدهورة",
+      "maintenance": "قيد الصيانة",
+      "offline": "متوقفة"
+    },
+    "empty": "لا توجد خدمات حتى الآن."
+  },
+  "requests": {
+    "title": "الطلبات",
+    "columns": {
+      "reference": "المرجع",
+      "subject": "الموضوع",
+      "requester": "مقدّم الطلب",
+      "priority": "الأولوية",
+      "status": "الحالة",
+      "created": "تاريخ الإنشاء"
+    },
+    "status": {
+      "open": "مفتوح",
+      "in_progress": "قيد المعالجة",
+      "resolved": "تم الحل",
+      "closed": "مغلق"
+    },
+    "priority": {
+      "low": "منخفضة",
+      "medium": "متوسطة",
+      "high": "مرتفعة",
+      "urgent": "عاجلة"
+    },
+    "empty": "لا توجد طلبات حتى الآن."
+  },
+  "cardPayments": {
+    "title": "دفعات البطاقة",
+    "columns": {
+      "reference": "المرجع",
+      "cardholder": "حامل البطاقة",
+      "card": "البطاقة",
+      "amount": "المبلغ",
+      "status": "الحالة",
+      "date": "التاريخ"
+    },
+    "status": {
+      "succeeded": "ناجحة",
+      "pending": "قيد الانتظار",
+      "failed": "فاشلة",
+      "refunded": "مستردة"
+    },
+    "brand": {
+      "visa": "Visa",
+      "mastercard": "Mastercard",
+      "amex": "Amex"
+    },
+    "empty": "لا توجد دفعات بطاقة حتى الآن."
+  },
+  "users": {
+    "heading": "أعضاء الفريق",
+    "description": "كل من يملك صلاحية الوصول إلى مساحة العمل هذه.",
+    "columns": {
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "role": "الدور",
+      "added": "تاريخ الإضافة"
+    },
+    "empty": "لا يوجد مستخدمون حتى الآن.",
+    "deleteAction": "حذف {{name}}",
+    "cannotDeleteSelf": "لا يمكنك حذف حسابك الخاص",
+    "invite": {
+      "trigger": "دعوة مستخدم",
+      "title": "دعوة مستخدم",
+      "description": "سيصلهم بريد إلكتروني يحتوي على رابط لتعيين كلمة المرور.",
+      "nameLabel": "الاسم",
+      "namePlaceholder": "Ada Lovelace",
+      "emailLabel": "البريد الإلكتروني",
+      "emailPlaceholder": "ada@example.com",
+      "roleLabel": "الدور",
+      "rolePlaceholder": "اختر دورًا",
+      "submit": "إرسال الدعوة",
+      "submitting": "جارٍ الإرسال…",
+      "emailInvalid": "أدخل بريدًا إلكترونيًا صالحًا.",
+      "nameTooShort": "يجب أن يتكوّن الاسم من حرفين على الأقل.",
+      "toastSuccess": "تم إرسال الدعوة إلى {{email}}",
+      "toastError": "تعذّر إرسال الدعوة."
+    },
+    "delete": {
+      "title": "حذف {{name}}؟",
+      "description": "سيؤدي هذا إلى إزالة {{email}} وإلغاء صلاحية وصوله فورًا. لا يمكن التراجع عن هذا الإجراء.",
+      "confirm": "حذف المستخدم",
+      "confirming": "جارٍ الحذف…",
+      "toastSuccess": "تم حذف المستخدم",
+      "toastError": "تعذّر حذف المستخدم."
+    }
+  },
+  "settings": {
+    "account": {
+      "title": "الحساب",
+      "description": "ملفك الشخصي كما ورد من `GET /auth/profile`. للقراءة فقط في هذا القالب.",
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "role": "الدور",
+      "memberSince": "عضو منذ",
+      "lastSignIn": "آخر تسجيل دخول",
+      "verified": "موثّق",
+      "unverified": "غير موثّق"
+    },
+    "appearance": {
+      "title": "المظهر",
+      "description": "التبديل بين المظهر الفاتح والداكن ومظهر النظام من قائمة المستخدم أسفل الشريط الجانبي."
+    }
+  },
+  "errors": {
+    "notFoundTitle": "الصفحة غير موجودة",
+    "notFoundBody": "الصفحة التي تبحث عنها غير موجودة أو لم تعد لديك صلاحية الوصول إليها.",
+    "backToDashboard": "العودة إلى لوحة التحكم",
+    "routeErrorTitle": "حدث خطأ ما",
+    "unexpectedError": "حدث خطأ غير متوقع.",
+    "tryAgain": "حاول مرة أخرى"
+  }
+}

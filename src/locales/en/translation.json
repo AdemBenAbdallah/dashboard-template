@@ -1,0 +1,298 @@
+{
+  "common": {
+    "restoringSession": "Restoring your session…",
+    "loading": "Loading…",
+    "placeholderListDescription": "Placeholder list — columns will change once the real shape is known.",
+    "emptyValue": "—",
+    "cancel": "Cancel",
+    "close": "Close",
+    "more": "More",
+    "toggleSidebar": "Toggle Sidebar"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "services": "Services",
+    "requests": "Requests",
+    "cardPayments": "Card Payments",
+    "users": "Users",
+    "settings": "Settings"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "description": "Enter your credentials to access the dashboard.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "passwordLabel": "Password",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "emailInvalid": "Enter a valid email address.",
+      "passwordTooShort": "Password must be at least 8 characters.",
+      "genericError": "Could not sign you in. Try again.",
+      "noDashboardAccess": "This account doesn't have access to the dashboard."
+    },
+    "roles": {
+      "SUPERADMIN": "Super admin",
+      "ADMIN_DEVELOPER": "Admin developer",
+      "ADMIN": "Admin",
+      "HR": "HR",
+      "STAFF": "Staff",
+      "PROFESSIONAL": "Professional",
+      "CUSTOMER": "Customer"
+    },
+    "logout": "Log out",
+    "loggingOut": "Logging out…"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "locale": {
+    "label": "Language",
+    "en": "English",
+    "ar": "العربية"
+  },
+  "table": {
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {{page}} of {{pages}}",
+    "firstPage": "First page",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "lastPage": "Last page",
+    "rowCount_one": "{{count}} row",
+    "rowCount_other": "{{count}} rows"
+  },
+  "dashboard": {
+    "cards": {
+      "revenue": {
+        "label": "Total Revenue",
+        "trendLabel": "Trending up this month",
+        "description": "Visitors for the last 6 months"
+      },
+      "customers": {
+        "label": "New Customers",
+        "trendLabel": "Down 20% this period",
+        "description": "Acquisition needs attention"
+      },
+      "accounts": {
+        "label": "Active Accounts",
+        "trendLabel": "Strong user retention",
+        "description": "Engagement exceeds targets"
+      },
+      "growth": {
+        "label": "Growth Rate",
+        "trendLabel": "Steady performance increase",
+        "description": "Meets growth projections"
+      }
+    },
+    "chart": {
+      "title": "Total Visitors",
+      "descriptionFull": "Total for the {{range}}",
+      "selectTimeRangeAriaLabel": "Select a time range"
+    },
+    "ranges": {
+      "90d": "Last 3 months",
+      "30d": "Last 30 days",
+      "7d": "Last 7 days"
+    },
+    "table": {
+      "columns": {
+        "header": "Header",
+        "sectionType": "Section Type",
+        "status": "Status",
+        "target": "Target",
+        "limit": "Limit",
+        "reviewer": "Reviewer"
+      },
+      "noResults": "No results.",
+      "selectAll": "Select all",
+      "selectRow": "Select row",
+      "dragToReorder": "Drag to reorder",
+      "openMenu": "Open menu",
+      "columnsButton": "Columns",
+      "addSection": "Add Section",
+      "selectedCount": "{{selected}} of {{total}} row(s) selected.",
+      "goToFirstPage": "Go to first page",
+      "goToPreviousPage": "Go to previous page",
+      "goToNextPage": "Go to next page",
+      "goToLastPage": "Go to last page",
+      "savingRow": "Saving {{name}}",
+      "saved": "Done",
+      "saveFailed": "Error",
+      "assignReviewer": "Assign reviewer",
+      "rowActions": {
+        "edit": "Edit",
+        "makeCopy": "Make a copy",
+        "favorite": "Favorite",
+        "delete": "Delete"
+      },
+      "views": {
+        "label": "View",
+        "placeholder": "Select a view",
+        "outline": "Outline",
+        "pastPerformance": "Past Performance",
+        "keyPersonnel": "Key Personnel",
+        "focusDocuments": "Focus Documents"
+      },
+      "types": {
+        "coverPage": "Cover page",
+        "tableOfContents": "Table of contents",
+        "narrative": "Narrative",
+        "technicalContent": "Technical content",
+        "plainLanguage": "Plain language",
+        "research": "Research",
+        "planning": "Planning",
+        "financial": "Financial",
+        "legal": "Legal",
+        "visual": "Visual"
+      },
+      "statuses": {
+        "done": "Done",
+        "inProcess": "In Process"
+      },
+      "detail": {
+        "chartDescription": "Showing total visitors for the last 6 months",
+        "trend": "Trending up by 5.2% this month",
+        "trendDescription": "Showing total visitors for the last 6 months. This is just some random text to test the layout. It spans multiple lines and should wrap around.",
+        "desktop": "Desktop",
+        "mobile": "Mobile",
+        "typeLabel": "Type",
+        "typePlaceholder": "Select a type",
+        "statusPlaceholder": "Select a status",
+        "reviewerPlaceholder": "Select a reviewer",
+        "submit": "Submit",
+        "close": "Done"
+      }
+    }
+  },
+  "services": {
+    "title": "Services",
+    "columns": {
+      "service": "Service",
+      "category": "Category",
+      "status": "Status",
+      "owner": "Owner",
+      "updated": "Updated"
+    },
+    "status": {
+      "operational": "Operational",
+      "degraded": "Degraded",
+      "maintenance": "Maintenance",
+      "offline": "Offline"
+    },
+    "empty": "No services yet."
+  },
+  "requests": {
+    "title": "Requests",
+    "columns": {
+      "reference": "Reference",
+      "subject": "Subject",
+      "requester": "Requester",
+      "priority": "Priority",
+      "status": "Status",
+      "created": "Created"
+    },
+    "status": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "empty": "No requests yet."
+  },
+  "cardPayments": {
+    "title": "Card Payments",
+    "columns": {
+      "reference": "Reference",
+      "cardholder": "Cardholder",
+      "card": "Card",
+      "amount": "Amount",
+      "status": "Status",
+      "date": "Date"
+    },
+    "status": {
+      "succeeded": "Succeeded",
+      "pending": "Pending",
+      "failed": "Failed",
+      "refunded": "Refunded"
+    },
+    "brand": {
+      "visa": "Visa",
+      "mastercard": "Mastercard",
+      "amex": "Amex"
+    },
+    "empty": "No card payments yet."
+  },
+  "users": {
+    "heading": "Team members",
+    "description": "Everyone with access to this workspace.",
+    "columns": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "added": "Added"
+    },
+    "empty": "No users yet.",
+    "deleteAction": "Delete {{name}}",
+    "cannotDeleteSelf": "You cannot delete your own account",
+    "invite": {
+      "trigger": "Invite user",
+      "title": "Invite a user",
+      "description": "They'll receive an email with a link to set their password.",
+      "nameLabel": "Name",
+      "namePlaceholder": "Ada Lovelace",
+      "emailLabel": "Email",
+      "emailPlaceholder": "ada@example.com",
+      "roleLabel": "Role",
+      "rolePlaceholder": "Select a role",
+      "submit": "Send invite",
+      "submitting": "Sending…",
+      "emailInvalid": "Enter a valid email address.",
+      "nameTooShort": "Name must be at least 2 characters.",
+      "toastSuccess": "Invitation sent to {{email}}",
+      "toastError": "Could not send the invitation."
+    },
+    "delete": {
+      "title": "Delete {{name}}?",
+      "description": "This removes {{email}} and revokes their access immediately. This action cannot be undone.",
+      "confirm": "Delete user",
+      "confirming": "Deleting…",
+      "toastSuccess": "User deleted",
+      "toastError": "Could not delete the user."
+    }
+  },
+  "settings": {
+    "account": {
+      "title": "Account",
+      "description": "Your profile as reported by `GET /auth/profile`. Read-only in this template.",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "role": "Role",
+      "memberSince": "Member since",
+      "lastSignIn": "Last sign-in",
+      "verified": "Verified",
+      "unverified": "Unverified"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "description": "Switch between light, dark and system themes from the user menu at the bottom of the sidebar."
+    }
+  },
+  "errors": {
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The page you're looking for doesn't exist or you no longer have access to it.",
+    "backToDashboard": "Back to dashboard",
+    "routeErrorTitle": "Something went wrong",
+    "unexpectedError": "An unexpected error occurred.",
+    "tryAgain": "Try again"
+  }
+}
