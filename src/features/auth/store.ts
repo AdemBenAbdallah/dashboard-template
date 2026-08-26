@@ -16,8 +16,14 @@ export interface AuthState {
   setStatus: (status: AuthStatus) => void
   /** Writes a full session after login or bootstrap. */
   setSession: (session: Session) => void
-  /** Replaces just the token pair after a silent refresh. */
-  setTokens: (tokens: { accessToken: string; refreshToken: string }) => void
+  /**
+   * Updates the tokens after a silent refresh.
+   *
+   * `refreshToken` is optional because the backend does not rotate it — a
+   * refresh returns an access token alone, and the stored refresh token must
+   * survive untouched.
+   */
+  setTokens: (tokens: { accessToken: string; refreshToken?: string }) => void
   clearSession: () => void
 }
 
@@ -38,7 +44,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
   },
 
   setTokens: ({ accessToken, refreshToken }) => {
-    tokenStorage.setRefreshToken(refreshToken)
+    if (refreshToken) tokenStorage.setRefreshToken(refreshToken)
     set({ accessToken })
   },
 

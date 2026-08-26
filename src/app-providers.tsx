@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query"
 import { QueryClientProvider } from "@tanstack/react-query"
 import type { ReactNode } from "react"
+import { LocaleProvider } from "@/components/layout/locale-provider"
 import { ThemeProvider } from "@/components/layout/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -24,17 +25,19 @@ export function AppProviders({
   children: ReactNode
 }) {
   return (
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider delayDuration={0}>
-          {children}
-          {/*
-            Inside the provider tree so mutation feedback is assertable in
-            tests, not just visible in the browser.
-          */}
-          <Toaster position="bottom-right" richColors />
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <LocaleProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider delayDuration={0}>
+            {children}
+            {/*
+              Inside the provider tree so mutation feedback is assertable in
+              tests, not just visible in the browser.
+            */}
+            <Toaster position="bottom-right" richColors />
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </LocaleProvider>
   )
 }

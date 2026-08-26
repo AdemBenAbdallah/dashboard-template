@@ -3,16 +3,16 @@ import { hasRole, ROLE_VALUES, ROLES, roleLabel } from "./roles"
 
 describe("hasRole", () => {
   it("allows any role when the resource declares no restriction", () => {
-    expect(hasRole(ROLES.PROFICIENT, undefined)).toBe(true)
+    expect(hasRole(ROLES.STAFF, undefined)).toBe(true)
     expect(hasRole(ROLES.SUPERADMIN, undefined)).toBe(true)
   })
 
   it("treats an empty allow-list as unrestricted", () => {
-    expect(hasRole(ROLES.PROFICIENT, [])).toBe(true)
+    expect(hasRole(ROLES.STAFF, [])).toBe(true)
   })
 
   it("denies an anonymous user any restricted resource", () => {
-    expect(hasRole(null, [ROLES.PROFICIENT])).toBe(false)
+    expect(hasRole(null, [ROLES.STAFF])).toBe(false)
     expect(hasRole(undefined, [ROLES.SUPERADMIN])).toBe(false)
   })
 
@@ -24,13 +24,11 @@ describe("hasRole", () => {
 
   it("matches when the role is in the allow-list", () => {
     expect(hasRole(ROLES.SUPERADMIN, [ROLES.SUPERADMIN])).toBe(true)
-    expect(
-      hasRole(ROLES.PROFICIENT, [ROLES.SUPERADMIN, ROLES.PROFICIENT]),
-    ).toBe(true)
+    expect(hasRole(ROLES.STAFF, [ROLES.SUPERADMIN, ROLES.STAFF])).toBe(true)
   })
 
   it("denies when the role is absent from the allow-list", () => {
-    expect(hasRole(ROLES.PROFICIENT, [ROLES.SUPERADMIN])).toBe(false)
+    expect(hasRole(ROLES.STAFF, [ROLES.SUPERADMIN])).toBe(false)
   })
 })
 
@@ -41,10 +39,12 @@ describe("role metadata", () => {
   })
 
   it("has a human label for every role", () => {
-    // Guards against adding a role to ROLES and forgetting ROLE_LABELS.
+    // Guards against adding a role to ROLES and forgetting the `auth.roles`
+    // block in the locale files — i18next echoes the key back when it misses,
+    // so an unresolved label is the dotted path rather than a name.
     for (const role of ROLE_VALUES) {
       expect(roleLabel(role)).toBeTruthy()
-      expect(roleLabel(role)).not.toBe(role)
+      expect(roleLabel(role)).not.toContain("auth.roles")
     }
   })
 })

@@ -2,7 +2,7 @@ import { HttpResponse } from "msw"
 
 /**
  * Handlers are registered against the same base URL the app calls, so a
- * relative `VITE_API_URL` like `/api` and an absolute one both match.
+ * relative `VITE_API_URL` like `/v1/api` and an absolute one both match.
  */
 export const API_URL = import.meta.env.VITE_API_URL
 

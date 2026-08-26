@@ -9,39 +9,15 @@ import tableData from "../data/table.json"
 import { resolveCaller } from "../db"
 import { API_URL, delay, unauthorized } from "./shared"
 
+/**
+ * Measurements only — the labels and copy live in the locale files, keyed by
+ * `id`. See the note on `statCardSchema`.
+ */
 const STAT_CARDS: StatCard[] = [
-  {
-    id: "revenue",
-    label: "Total Revenue",
-    value: "$1,250.00",
-    delta: 12.5,
-    trendLabel: "Trending up this month",
-    description: "Visitors for the last 6 months",
-  },
-  {
-    id: "customers",
-    label: "New Customers",
-    value: "1,234",
-    delta: -20,
-    trendLabel: "Down 20% this period",
-    description: "Acquisition needs attention",
-  },
-  {
-    id: "accounts",
-    label: "Active Accounts",
-    value: "45,678",
-    delta: 12.5,
-    trendLabel: "Strong user retention",
-    description: "Engagement exceeds targets",
-  },
-  {
-    id: "growth",
-    label: "Growth Rate",
-    value: "4.5%",
-    delta: 4.5,
-    trendLabel: "Steady performance increase",
-    description: "Meets growth projections",
-  },
+  { id: "revenue", value: "$1,250.00", delta: 12.5 },
+  { id: "customers", value: "1,234", delta: -20 },
+  { id: "accounts", value: "45,678", delta: 12.5 },
+  { id: "growth", value: "4.5%", delta: 4.5 },
 ]
 
 const RANGE_DAYS = { "7d": 7, "30d": 30, "90d": 90 } as const

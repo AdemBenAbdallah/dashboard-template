@@ -10,14 +10,18 @@ export const CHART_RANGES = ["7d", "30d", "90d"] as const
 export const chartRangeSchema = z.enum(CHART_RANGES)
 export type ChartRange = z.infer<typeof chartRangeSchema>
 
+/**
+ * The API sends the *measurement*; the client owns the *copy*.
+ *
+ * `id` is the contract between the two: `SectionCards` looks up the label,
+ * trend line and description under `dashboard.cards.<id>` in the active
+ * locale. Adding a card means adding its `id` here and to both locale files.
+ */
 export const statCardSchema = z.object({
   id: z.string(),
-  label: z.string(),
   value: z.string(),
   /** Percentage change vs. the previous period; sign drives the trend arrow. */
   delta: z.number(),
-  trendLabel: z.string(),
-  description: z.string(),
 })
 
 export type StatCard = z.infer<typeof statCardSchema>

@@ -1,4 +1,5 @@
 import { Trash2Icon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -12,9 +13,17 @@ import {
 import { Can } from "@/features/auth/components/can"
 import { ROLES } from "@/features/auth/roles"
 import type { User } from "@/features/auth/schemas"
+import { useLocaleStore } from "@/features/locale/store"
+import { formatDate } from "@/lib/utils"
 import { RoleBadge } from "./role-badge"
 
-const COLUMNS = ["Name", "Email", "Role", "Added", ""] as const
+const COLUMN_KEYS = [
+  "users.columns.name",
+  "users.columns.email",
+  "users.columns.role",
+  "users.columns.added",
+  "",
+] as const
 
 interface UsersTableProps {
   users: User[]
@@ -28,17 +37,22 @@ export function UsersTable({
   onDelete,
   currentUserId,
 }: UsersTableProps) {
+  const { t } = useTranslation()
+  const locale = useLocaleStore((state) => state.locale)
+
   return (
     <div className="overflow-hidden rounded-lg border">
       <Table>
         <TableHeader className="bg-muted">
           <TableRow>
-            {COLUMNS.map((column, index) => (
+            {COLUMN_KEYS.map((key, index) => (
               <TableHead
-                key={column || "actions"}
-                className={index === COLUMNS.length - 1 ? "w-12" : undefined}
+                key={key || "actions"}
+                className={
+                  index === COLUMN_KEYS.length - 1 ? "w-12" : undefined
+                }
               >
-                {column}
+                {key ? t(key) : null}
               </TableHead>
             ))}
           </TableRow>
@@ -47,10 +61,10 @@ export function UsersTable({
           {users.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={COLUMNS.length}
+                colSpan={COLUMN_KEYS.length}
                 className="h-24 text-center text-muted-foreground"
               >
-                No users yet.
+                {t("users.empty")}
               </TableCell>
             </TableRow>
           ) : (
@@ -64,9 +78,7 @@ export function UsersTable({
                   <RoleBadge role={user.role} />
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {new Date(user.createdAt).toLocaleDateString("en-US", {
-                    dateStyle: "medium",
-                  })}
+                  {formatDate(user.createdAt, locale)}
                 </TableCell>
                 <TableCell>
                   {/*
@@ -82,13 +94,15 @@ export function UsersTable({
                       disabled={user.id === currentUserId}
                       title={
                         user.id === currentUserId
-                          ? "You cannot delete your own account"
-                          : `Delete ${user.name}`
+                          ? t("users.cannotDeleteSelf")
+                          : t("users.deleteAction", { name: user.name })
                       }
                       onClick={() => onDelete(user)}
                     >
                       <Trash2Icon className="size-4" />
-                      <span className="sr-only">Delete {user.name}</span>
+                      <span className="sr-only">
+                        {t("users.deleteAction", { name: user.name })}
+                      </span>
                     </Button>
                   </Can>
                 </TableCell>
@@ -102,13 +116,17 @@ export function UsersTable({
 }
 
 export function UsersTableSkeleton({ rows = 5 }: { rows?: number }) {
+  const { t } = useTranslation()
+
   return (
     <div className="overflow-hidden rounded-lg border">
       <Table>
         <TableHeader className="bg-muted">
           <TableRow>
-            {COLUMNS.map((column) => (
-              <TableHead key={column || "actions"}>{column}</TableHead>
+            {COLUMN_KEYS.map((key) => (
+              <TableHead key={key || "actions"}>
+                {key ? t(key) : null}
+              </TableHead>
             ))}
           </TableRow>
         </TableHeader>

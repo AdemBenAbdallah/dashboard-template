@@ -39,10 +39,21 @@ export type CardPayment = z.infer<typeof cardPaymentSchema>
 export const cardPaymentListSchema = paginatedSchema(cardPaymentSchema)
 export type CardPaymentList = z.infer<typeof cardPaymentListSchema>
 
-/** Formats minor units as currency for display. */
-export function formatAmount(amountMinor: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", {
+/**
+ * Formats minor units as currency for display.
+ *
+ * Numerals stay Western digits (`numberingSystem: "latn"`) even in Arabic —
+ * mixing Eastern Arabic-Indic digits into financial figures is jarring and
+ * uncommon practice for admin dashboards.
+ */
+export function formatAmount(
+  amountMinor: number,
+  currency: string,
+  locale: string,
+): string {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
+    numberingSystem: "latn",
   }).format(amountMinor / 100)
 }

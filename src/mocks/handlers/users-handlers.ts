@@ -34,7 +34,7 @@ export const usersHandlers = [
     if (!caller) return unauthorized()
     if (caller.role !== ROLES.SUPERADMIN) return forbidden()
 
-    const parsed = inviteUserSchema.safeParse(await request.json())
+    const parsed = inviteUserSchema().safeParse(await request.json())
     if (!parsed.success) {
       return HttpResponse.json(
         { message: "Check the invitation details and try again." },
@@ -65,7 +65,7 @@ export const usersHandlers = [
     if (caller.role !== ROLES.SUPERADMIN) return forbidden()
 
     const id = String(params.id)
-    if (id === caller.id) {
+    if (id === caller.pubkey) {
       return HttpResponse.json(
         { message: "You cannot delete your own account." },
         { status: 409 },

@@ -1,73 +1,90 @@
 import { HttpResponse, http } from "msw"
-import { loginSchema } from "@/features/auth/schemas"
 import {
   findAccountByCredentials,
   issueTokens,
+  refreshAccessToken,
   resolveCaller,
-  revokeRefreshToken,
-  rotateTokens,
+  revokeTokensFor,
+  toProfile,
   toPublicUser,
 } from "../db"
 import { API_URL, delay, unauthorized } from "./shared"
 
+/**
+ * Mirrors the iris-backend `@Controller('api/auth')` routes the dashboard
+ * uses. Paths, casing and status codes match the real service — including the
+ * parts that are awkward, like a refresh that returns an access token alone.
+ */
 export const authHandlers = [
-  http.post(`${API_URL}/auth/login`, async ({ request }) => {
+  http.post(`${API_URL}/auth/signin`, async ({ request }) => {
     await delay()
 
-    const parsed = loginSchema.safeParse(await request.json())
-    if (!parsed.success) {
+    const body = (await request.json().catch(() => ({}))) as {
+      username?: string
+      password?: string
+    }
+    if (!body.username || !body.password) {
+      // The global ValidationPipe answers with an array of messages.
       return HttpResponse.json(
-        { message: "Email and password are required." },
+        { message: ["username should not be empty"] },
         { status: 400 },
       )
     }
 
-    const account = findAccountByCredentials(
-      parsed.data.email,
-      parsed.data.password,
-    )
+    const account = findAccountByCredentials(body.username, body.password)
     if (!account) {
       return HttpResponse.json(
-        { message: "Incorrect email or password." },
+        { message: "invalid_credentials" },
         { status: 401 },
       )
+    }
+    if (account.status === "INACTIVE") {
+      return HttpResponse.json(
+        { message: "account_pending_approval" },
+        { status: 403 },
+      )
+    }
+    if (account.status === "BLOCKED") {
+      return HttpResponse.json({ message: "account_blocked" }, { status: 403 })
     }
 
     return HttpResponse.json({
+      ...issueTokens(account.pubkey),
       user: toPublicUser(account),
-      ...issueTokens(account.id),
     })
   }),
 
-  http.post(`${API_URL}/auth/refresh`, async ({ request }) => {
+  http.post(`${API_URL}/auth/refresh-token`, async ({ request }) => {
     await delay(150)
 
-    const body = (await request.json()) as { refreshToken?: string }
-    const tokens = body.refreshToken ? rotateTokens(body.refreshToken) : null
+    const body = (await request.json().catch(() => ({}))) as {
+      refresh_token?: string
+    }
+    const tokens = body.refresh_token
+      ? refreshAccessToken(body.refresh_token)
+      : null
 
     if (!tokens) {
-      return HttpResponse.json(
-        { message: "Session expired. Please sign in again." },
-        { status: 401 },
-      )
+      return unauthorized("Session expired. Please sign in again.")
     }
 
+    // Note: no refresh token in the response. The backend does not rotate.
     return HttpResponse.json(tokens)
   }),
 
-  http.post(`${API_URL}/auth/logout`, async ({ request }) => {
+  http.post(`${API_URL}/auth/signout`, async ({ request }) => {
     await delay(100)
-    const body = (await request.json().catch(() => ({}))) as {
-      refreshToken?: string
-    }
-    revokeRefreshToken(body.refreshToken)
-    return new HttpResponse(null, { status: 204 })
+    // The backend identifies the session from the bearer token, not a body.
+    const caller = resolveCaller(request.headers.get("Authorization"))
+    if (!caller) return unauthorized()
+    revokeTokensFor(caller.pubkey)
+    return HttpResponse.json({ message: "Token invalidated successfully" })
   }),
 
-  http.get(`${API_URL}/auth/me`, async ({ request }) => {
+  http.get(`${API_URL}/auth/profile`, async ({ request }) => {
     await delay(100)
     const caller = resolveCaller(request.headers.get("Authorization"))
     if (!caller) return unauthorized()
-    return HttpResponse.json(toPublicUser(caller))
+    return HttpResponse.json(toProfile(caller))
   }),
 ]

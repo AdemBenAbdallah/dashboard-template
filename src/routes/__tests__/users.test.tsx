@@ -5,7 +5,8 @@ import { ROLES } from "@/features/auth/roles"
 import { server } from "@/test/server"
 import { renderRoute } from "@/test/utils"
 
-const API = "http://localhost/api"
+/** Absolute, and pinned in vitest.config.ts — see the note there. */
+const API = import.meta.env.VITE_API_URL
 
 /** The row for a user, located by their name rather than by index. */
 async function rowFor(name: string) {
@@ -28,7 +29,7 @@ describe("users list", () => {
     expect(avery.getByText(/super admin/i)).toBeVisible()
 
     const blake = await rowFor("Blake Rivera")
-    expect(blake.getByText(/proficient/i)).toBeVisible()
+    expect(blake.getByText(/staff/i)).toBeVisible()
   })
 
   it("disables deleting your own account", async () => {

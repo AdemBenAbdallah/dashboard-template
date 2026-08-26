@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
@@ -10,7 +11,7 @@ import {
 
 /**
  * Placeholder rows that match the real table's header and row height, so
- * nothing shifts when the data arrives.
+ * nothing shifts when the data arrives. `columns` are translation keys.
  */
 export function TableSkeleton({
   columns,
@@ -19,13 +20,15 @@ export function TableSkeleton({
   columns: readonly string[]
   rows?: number
 }) {
+  const { t } = useTranslation()
+
   return (
     <div className="overflow-hidden rounded-lg border">
       <Table>
         <TableHeader className="bg-muted">
           <TableRow>
             {columns.map((column) => (
-              <TableHead key={column}>{column}</TableHead>
+              <TableHead key={column}>{t(column)}</TableHead>
             ))}
           </TableRow>
         </TableHeader>

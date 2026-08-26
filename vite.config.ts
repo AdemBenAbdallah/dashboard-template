@@ -29,6 +29,22 @@ export default defineConfig({
     }),
     tailwindcss(),
   ],
+  server: {
+    // The backend enables URI versioning (`defaultVersion: '1'`) *and* declares
+    // its controllers as `@Controller('api/...')`, so every route lives at
+    // `/v1/api/...`. That `/v1` is not optional: `main.ts` mounts the Swagger
+    // basic-auth guard on `/api`, which in Express also covers everything
+    // beneath it — requests sent to `/api/auth/signin` are answered by the docs
+    // gate with a 401 before they ever reach the controller.
+    //
+    // Proxying also keeps dev same-origin, so CORS never applies.
+    proxy: {
+      "/v1": {
+        target: process.env.VITE_PROXY_TARGET ?? "http://localhost:5000",
+        changeOrigin: true,
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

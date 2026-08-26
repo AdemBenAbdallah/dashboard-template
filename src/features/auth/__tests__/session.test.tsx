@@ -14,7 +14,8 @@ import {
   TEST_CREDENTIALS,
 } from "@/test/utils"
 
-const API = "http://localhost/api"
+/** Absolute, and pinned in vitest.config.ts — see the note there. */
+const API = import.meta.env.VITE_API_URL
 
 /** Counts requests to a path for the duration of one test. */
 function countRequests(method: "GET" | "POST", path: string) {
@@ -49,7 +50,7 @@ describe("session bootstrap", () => {
   it("clears the session when the stored token is rejected", async () => {
     tokenStorage.setRefreshToken("rt_usr_999_1_1")
     server.use(
-      http.post(`${API}/auth/refresh`, () =>
+      http.post(`${API}/auth/refresh-token`, () =>
         HttpResponse.json({ message: "Session expired." }, { status: 401 }),
       ),
     )
@@ -61,16 +62,15 @@ describe("session bootstrap", () => {
 
   /**
    * Regression: bootstrap was not single-flight, so React StrictMode's
-   * double-invoked effect fired two refreshes. Refresh tokens rotate, so the
-   * second call presented an already-revoked token, got a 401, and tore down
-   * the session the first call had just established.
+   * double-invoked effect fired two refreshes — a duplicate refresh plus
+   * profile round trip on every page load.
    */
   it("issues exactly one refresh when called concurrently", async () => {
-    const session = await signIn(ROLES.PROFICIENT)
+    const session = await signIn(ROLES.STAFF)
     useAuthStore.setState({ user: null, accessToken: null, status: "idle" })
     tokenStorage.setRefreshToken(session.refreshToken)
 
-    const refreshes = countRequests("POST", "/api/auth/refresh")
+    const refreshes = countRequests("POST", "/v1/api/auth/refresh-token")
 
     const [a, b, c] = await Promise.all([
       bootstrapSession(),
@@ -85,20 +85,39 @@ describe("session bootstrap", () => {
     expect(c).toBe(a)
     expect(useAuthStore.getState().status).toBe("authenticated")
   })
+
+  /**
+   * The backend's `refreshTokenUser` returns `{ access_token }` and nothing
+   * else — it does not rotate the refresh token. The client must accept that
+   * response and keep the stored refresh token, rather than treating a missing
+   * one as a dead session.
+   */
+  it("keeps the stored refresh token when the refresh does not rotate it", async () => {
+    const session = await signIn(ROLES.SUPERADMIN)
+    useAuthStore.setState({ user: null, accessToken: null, status: "idle" })
+    tokenStorage.setRefreshToken(session.refreshToken)
+
+    const restored = await bootstrapSession()
+
+    expect(restored?.refreshToken).toBe(session.refreshToken)
+    expect(tokenStorage.getRefreshToken()).toBe(session.refreshToken)
+    // A new access token was issued, so the old one is not simply reused.
+    expect(restored?.accessToken).not.toBe(session.accessToken)
+    expect(useAuthStore.getState().accessToken).toBe(restored?.accessToken)
+  })
 })
 
 describe("401 refresh-and-replay", () => {
   /**
    * Regression: concurrent 401s must share one refresh and then all be
-   * replayed, rather than each firing its own refresh (which would rotate the
-   * token out from under the others).
+   * replayed, rather than each firing its own refresh.
    */
   it("refreshes once for concurrent 401s and replays every request", async () => {
     await signIn(ROLES.SUPERADMIN)
     // Poison the in-memory access token so the next calls 401 once.
     useAuthStore.setState({ accessToken: "at_expired" })
 
-    const refreshes = countRequests("POST", "/api/auth/refresh")
+    const refreshes = countRequests("POST", "/v1/api/auth/refresh-token")
 
     const results = await Promise.all([
       apiClient.get("/dashboard/stats"),
@@ -116,7 +135,7 @@ describe("401 refresh-and-replay", () => {
     await signIn(ROLES.SUPERADMIN)
     useAuthStore.setState({ accessToken: "at_expired" })
     server.use(
-      http.post(`${API}/auth/refresh`, () =>
+      http.post(`${API}/auth/refresh-token`, () =>
         HttpResponse.json({ message: "Session expired." }, { status: 401 }),
       ),
     )
@@ -128,8 +147,8 @@ describe("401 refresh-and-replay", () => {
   })
 
   it("does not retry a 403 — that is authorization, not authentication", async () => {
-    await signIn(ROLES.PROFICIENT)
-    const refreshes = countRequests("POST", "/api/auth/refresh")
+    await signIn(ROLES.STAFF)
+    const refreshes = countRequests("POST", "/v1/api/auth/refresh-token")
 
     await expect(apiClient.get("/users")).rejects.toMatchObject({
       response: { status: 403 },
@@ -142,7 +161,7 @@ describe("401 refresh-and-replay", () => {
 
 describe("no login flash for a restored session", () => {
   it("lands on the requested protected route, not /login", async () => {
-    const { router } = await renderRoute("/settings", { as: ROLES.PROFICIENT })
+    const { router } = await renderRoute("/settings", { as: ROLES.STAFF })
     expect(currentPath(router)).toBe("/settings")
     expect(screen.queryByRole("button", { name: /sign in/i })).toBeNull()
   })

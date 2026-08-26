@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,21 +22,23 @@ export function DeleteUserDialog({
   user,
   onOpenChange,
 }: DeleteUserDialogProps) {
+  const { t } = useTranslation()
   const deleteUser = useDeleteUser()
 
   return (
     <AlertDialog open={user !== null} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {user?.name}?</AlertDialogTitle>
+          <AlertDialogTitle>
+            {t("users.delete.title", { name: user?.name })}
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            This removes {user?.email} and revokes their access immediately.
-            This action cannot be undone.
+            {t("users.delete.description", { email: user?.email })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={deleteUser.isPending}>
-            Cancel
+            {t("common.cancel")}
           </AlertDialogCancel>
           <AlertDialogAction
             disabled={deleteUser.isPending}
@@ -48,7 +51,9 @@ export function DeleteUserDialog({
               })
             }}
           >
-            {deleteUser.isPending ? "Deleting…" : "Delete user"}
+            {deleteUser.isPending
+              ? t("users.delete.confirming")
+              : t("users.delete.confirm")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

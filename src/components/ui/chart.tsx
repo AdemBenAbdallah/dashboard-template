@@ -2,6 +2,7 @@ import * as React from "react"
 import type { TooltipValueType } from "recharts"
 import * as RechartsPrimitive from "recharts"
 
+import { useLocaleStore } from "@/features/locale/store"
 import { cn } from "@/lib/utils"
 
 // Format: { THEME_NAME: CSS_SELECTOR }
@@ -143,6 +144,7 @@ function ChartTooltipContent({
     "accessibilityLayer"
   >) {
   const { config } = useChart()
+  const locale = useLocaleStore((state) => state.locale)
 
   const tooltipLabel = React.useMemo(() => {
     if (hideLabel || !payload?.length) {
@@ -253,7 +255,9 @@ function ChartTooltipContent({
                       {item.value != null && (
                         <span className="font-mono font-medium text-foreground tabular-nums">
                           {typeof item.value === "number"
-                            ? item.value.toLocaleString()
+                            ? item.value.toLocaleString(locale, {
+                                numberingSystem: "latn",
+                              })
                             : String(item.value)}
                         </span>
                       )}

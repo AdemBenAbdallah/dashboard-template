@@ -10,22 +10,30 @@ import {
 } from "../schemas"
 import { useAuthStore } from "../store"
 
+/**
+ * `POST /auth/signin` is the passport-local endpoint: it takes `username`,
+ * not `email`. The form keeps `email` because that is what the user types.
+ */
 export async function login(input: LoginInput): Promise<Session> {
-  const response = await apiClient.post("/auth/login", input)
+  const response = await apiClient.post("/auth/signin", {
+    username: input.email,
+    password: input.password,
+  })
   return sessionSchema.parse(response.data)
 }
 
 export async function logout(): Promise<void> {
-  const refreshToken = tokenStorage.getRefreshToken()
   try {
-    await apiClient.post("/auth/logout", { refreshToken })
+    // No body: the backend reads the access token off the Authorization
+    // header, which the request interceptor has already attached.
+    await apiClient.post("/auth/signout")
   } catch {
     // A failed logout must still clear the client session.
   }
 }
 
 export async function fetchCurrentUser(): Promise<User> {
-  const response = await apiClient.get("/auth/me")
+  const response = await apiClient.get("/auth/profile")
   return userSchema.parse(response.data)
 }
 
@@ -37,11 +45,11 @@ export async function fetchCurrentUser(): Promise<User> {
  * is no longer valid — callers should treat that as "unauthenticated", not as
  * an error.
  *
- * Single-flight, and deliberately cached for the lifetime of the page: refresh
- * tokens rotate, so a second concurrent call would present the token the first
- * call just invalidated, get a 401, and tear down the session the first call
- * had just established. React StrictMode double-invokes effects in
- * development, which makes that race reproducible on every reload.
+ * Single-flight for the lifetime of the page. The backend does not rotate
+ * refresh tokens, so a concurrent second call would not invalidate the first,
+ * but it would still fire a duplicate refresh + profile round trip on every
+ * reload — React StrictMode double-invokes effects in development, which makes
+ * that happen on every reload.
  */
 let bootstrapPromise: Promise<Session | null> | null = null
 
@@ -68,14 +76,17 @@ async function runBootstrap(): Promise<Session | null> {
   store.setStatus("loading")
 
   try {
-    const response = await apiClient.post("/auth/refresh", { refreshToken })
-    const tokens = refreshResponseSchema.parse(response.data)
+    const response = await apiClient.post("/auth/refresh-token", {
+      refresh_token: refreshToken,
+    })
+    const { accessToken } = refreshResponseSchema.parse(response.data)
 
-    // Seed the access token so the follow-up /auth/me call is authorised.
-    store.setTokens(tokens)
+    // Seed the access token so the follow-up /auth/profile call is authorised.
+    store.setTokens({ accessToken })
 
     const user = await fetchCurrentUser()
-    const session: Session = { user, ...tokens }
+    // The refresh token is not re-issued, so the stored one is still current.
+    const session: Session = { user, accessToken, refreshToken }
     store.setSession(session)
     return session
   } catch {

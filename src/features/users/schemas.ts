@@ -1,6 +1,7 @@
 import { z } from "zod"
-import { ROLES } from "@/features/auth/roles"
+import { DASHBOARD_ROLES } from "@/features/auth/roles"
 import { userSchema } from "@/features/auth/schemas"
+import { i18next } from "@/lib/i18n"
 
 /** A user row is the same shape as the signed-in user. */
 export const userListSchema = z.object({
@@ -9,10 +10,15 @@ export const userListSchema = z.object({
 
 export type UserList = z.infer<typeof userListSchema>
 
-export const inviteUserSchema = z.object({
-  email: z.email("Enter a valid email address."),
-  name: z.string().min(2, "Name must be at least 2 characters."),
-  role: z.enum(ROLES),
-})
+/** A function so the messages pick up the active locale at validation time. */
+export function inviteUserSchema() {
+  return z.object({
+    email: z.email(i18next.t("users.invite.emailInvalid")),
+    name: z.string().min(2, i18next.t("users.invite.nameTooShort")),
+    // Invitations are for dashboard users only — never a customer or
+    // professional account, which are created through the mobile sign-up flows.
+    role: z.enum(DASHBOARD_ROLES),
+  })
+}
 
-export type InviteUserInput = z.infer<typeof inviteUserSchema>
+export type InviteUserInput = z.infer<ReturnType<typeof inviteUserSchema>>

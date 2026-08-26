@@ -27,7 +27,7 @@ import {
 const DEFAULT_RANGE: ChartRange = "90d"
 
 export const Route = createFileRoute("/_protected/dashboard")({
-  staticData: { title: "Dashboard" },
+  staticData: { title: "nav.dashboard" },
   // Warm the cache during navigation rather than after mount, so the page
   // does not waterfall three requests once it renders.
   loader: ({ context: { queryClient } }) =>

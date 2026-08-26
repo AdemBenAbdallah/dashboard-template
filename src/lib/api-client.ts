@@ -4,7 +4,7 @@ import { useAuthStore } from "@/features/auth/store"
 import { tokenStorage } from "./token-storage"
 
 /** Endpoints that must never trigger the refresh-and-retry flow themselves. */
-const AUTH_ENDPOINTS = ["/auth/login", "/auth/refresh", "/auth/logout"]
+const AUTH_ENDPOINTS = ["/auth/signin", "/auth/refresh-token", "/auth/signout"]
 
 interface RetriableConfig extends InternalAxiosRequestConfig {
   /** Set once a request has already been replayed after a refresh. */
@@ -53,17 +53,19 @@ async function refreshAccessToken(): Promise<string> {
   // A bare axios call, not `apiClient`: this request must not go through the
   // interceptors below, or a failing refresh would recurse.
   const response = await axios.post(
-    "/auth/refresh",
-    { refreshToken },
+    "/auth/refresh-token",
+    { refresh_token: refreshToken },
     {
       baseURL: import.meta.env.VITE_API_URL,
       headers: { "Content-Type": "application/json" },
     },
   )
 
-  const tokens = refreshResponseSchema.parse(response.data)
-  useAuthStore.getState().setTokens(tokens)
-  return tokens.accessToken
+  // Only an access token comes back — the refresh token is not rotated, so
+  // `setTokens` deliberately leaves the stored one alone.
+  const { accessToken } = refreshResponseSchema.parse(response.data)
+  useAuthStore.getState().setTokens({ accessToken })
+  return accessToken
 }
 
 function endSession(): void {
@@ -85,7 +87,7 @@ apiClient.interceptors.response.use(
     if (!config || !isUnauthorized || isAuthCall || config._retry) {
       if (isUnauthorized && (isAuthCall || config?._retry)) {
         // A retry that still 401s, or a failed refresh: the session is dead.
-        if (!config?.url?.includes("/auth/login")) endSession()
+        if (!config?.url?.includes("/auth/signin")) endSession()
       }
       return Promise.reject(error)
     }

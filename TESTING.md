@@ -16,7 +16,7 @@ would have been caught by a component unit test:
 | Bug | Symptom | What catches it |
 | --- | --- | --- |
 | Missing `TooltipProvider` | Every protected page threw into the error boundary | Rendering any protected route with the real provider tree |
-| `bootstrapSession` not single-flight | StrictMode's double effect fired two refreshes; the second 401'd on the rotated token and destroyed the session the first had just restored | `session.test.tsx` — asserts exactly one `/auth/refresh` for concurrent calls |
+| `bootstrapSession` not single-flight | StrictMode's double effect fired a duplicate refresh + profile round trip on every page load | `session.test.tsx` — asserts exactly one `/auth/refresh-token` for concurrent calls |
 | `routeTree.gen.ts` gitignored | A fresh clone could not build at all | The CI job, which runs on a clean checkout |
 
 Each has a regression test, and each was verified to **fail** when the fix is
@@ -37,6 +37,16 @@ schema drift apart.
 **L3 — route integration.** `src/routes/__tests__/`. The bulk of the value.
 Mounts the real route tree in the real provider tree against MSW, so guards,
 loaders, Zod parsing and the axios interceptors all run for real.
+
+**Locale.** `src/features/locale/__tests__/`. `store.test.tsx` covers the
+persisted choice and `selectDir`; `rtl-layout.test.tsx` renders a real route
+under `ar` and asserts `<html dir="rtl">`, that the sidebar docks to the right
+(its `data-side` is set from the direction — the container is pinned with
+physical `left-0`/`right-0`, so an RTL locale that does not flip it overlaps the
+page), and that the nav renders Arabic. Because i18next initialises
+synchronously from bundled resources, these assert on translated text with no
+`waitFor` on i18n readiness. Reset the locale to `"en"` in `afterEach` — the
+store is a module singleton and a leaked `ar` breaks every later text query.
 
 **L4 — E2E.** Not implemented yet. When added, keep it thin: login per role,
 one RBAC denial, one mutation. It is the slowest and flakiest layer and should
@@ -80,7 +90,7 @@ there* and the user was told why — not just that a request happened.
 
 - `renderRoute(path, { as: role })` — mounts the real route tree at `path`,
   optionally signed in. Returns `{ router, queryClient, user }`.
-- `signIn(role)` — authenticates through the real `/auth/login`, so the session
+- `signIn(role)` — authenticates through the real `/auth/signin`, so the session
   holds tokens the mock API will actually accept.
 - `createTestQueryClient()` — a fresh client per test with retries off. Never
   import the app singleton; a cached response would leak into the next test.

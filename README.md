@@ -5,8 +5,37 @@ TanStack Router (file-based) and Query, shadcn/ui on Tailwind v4, React Hook
 Form + Zod, Axios with token refresh, Zustand for session state, and MSW for a
 mock API.
 
-Two roles ship out of the box — `superadmin` and `proficient` — gated at three
-independent layers.
+The seven `iris-backend` roles ship out of the box — `SUPERADMIN`,
+`ADMIN_DEVELOPER`, `ADMIN`, `HR`, `STAFF`, `PROFESSIONAL`, `CUSTOMER` — gated at
+three independent layers. Only the first five (`DASHBOARD_ROLES` in
+`src/features/auth/roles.ts`) may sign in here at all; the last two belong to the
+mobile apps.
+
+Auth talks to the real `iris-backend` contract: `POST /v1/api/auth/signin`,
+`/auth/refresh-token`, `/auth/signout`, `GET /auth/profile`.
+
+**The `/v1` is required.** The Nest app enables URI versioning
+(`defaultVersion: '1'`) on top of controllers declared `@Controller('api/...')`,
+so real routes live at `/v1/api/...`. Sending to `/api/...` instead is answered
+by the Swagger basic-auth middleware — mounted on `/api` in `main.ts`, which in
+Express also covers everything beneath it — with a 401 `Authentication required`
+before the request ever reaches a controller.
+
+In development the Vite proxy forwards `/v1` to `http://localhost:5000`; set
+`VITE_PROXY_TARGET` to point elsewhere, and `VITE_ENABLE_MOCKS=false` to bypass
+MSW and hit the real service. See `.env.example`.
+
+`pnpm test:live` runs `live/auth.live.test.ts` against a running backend — login,
+profile, session restore, 401 refresh-and-replay, logout — using the app's own
+auth module. Credentials come from the environment, with no defaults:
+
+```bash
+LIVE_EMAIL=you@example.com LIVE_PASSWORD=... pnpm test:live
+```
+
+It is separate from `pnpm test` because the unit suite runs entirely on MSW and
+so can never catch the server disagreeing with the client. Sign-in is throttled
+at 10 requests / 30s, so the file authenticates once and shares the session.
 
 ## Requirements
 
@@ -40,15 +69,20 @@ pnpm exec msw init public/ --save
 
 ## Mock credentials
 
-The mock API seeds four accounts. **Every account uses the password
+The mock API seeds five accounts. **Every account uses the password
 `password123`.**
 
-| Email             | Password      | Role         | Sees                        |
-| ----------------- | ------------- | ------------ | --------------------------- |
-| `admin@acme.test` | `password123` | `superadmin` | Everything                  |
-| `user@acme.test`  | `password123` | `proficient` | Dashboard, Settings         |
-| `casey@acme.test` | `password123` | `proficient` | Dashboard, Settings         |
-| `dana@acme.test`  | `password123` | `superadmin` | Everything                  |
+| Email                | Password      | Role         | Sees                |
+| -------------------- | ------------- | ------------ | ------------------- |
+| `admin@acme.test`    | `password123` | `SUPERADMIN` | Everything          |
+| `user@acme.test`     | `password123` | `STAFF`      | Dashboard, Settings |
+| `casey@acme.test`    | `password123` | `STAFF`      | Dashboard, Settings |
+| `dana@acme.test`     | `password123` | `SUPERADMIN` | Everything          |
+| `customer@acme.test` | `password123` | `CUSTOMER`   | Nothing — rejected  |
+
+`customer@acme.test` has valid credentials and still cannot sign in: the backend
+authenticates any active account, so the dashboard checks `DASHBOARD_ROLES` on
+top of it.
 
 Sign in as `user@acme.test` to verify the guards: Services, Requests, Card
 Payments and Users are all absent from the sidebar, and navigating directly to
@@ -60,17 +94,17 @@ any of those URLs redirects to `/dashboard`.
 | ---------------- | ------------ | ---------------------------------------------- |
 | `/login`         | public       | Email + password, Zod-validated                |
 | `/dashboard`     | any          | Stat cards, area chart, dashboard-01 data table |
-| `/services`      | `superadmin` | Placeholder list table                         |
-| `/requests`      | `superadmin` | Placeholder list table                         |
-| `/card-payments` | `superadmin` | Placeholder list table                         |
-| `/users`         | `superadmin` | User list, role badges, invite, delete         |
+| `/services`      | `SUPERADMIN` | Placeholder list table                         |
+| `/requests`      | `SUPERADMIN` | Placeholder list table                         |
+| `/card-payments` | `SUPERADMIN` | Placeholder list table                         |
+| `/users`         | `SUPERADMIN` | User list, role badges, invite, delete         |
 | `/settings`      | any          | Read-only account details                      |
 
 Services, Requests and Card Payments are **placeholders**: the columns and mock
 rows are invented so the pages are navigable and exercise loading, pagination
 and the role guards. When the real shapes are known, edit the feature's
 `schemas.ts` and its table component — everything else is inferred or generic.
-They are `superadmin`-only for now; see "Changing who can see a page" below.
+They are `SUPERADMIN`-only for now; see "Changing who can see a page" below.
 
 Mock state (invites, deletions) lives in page memory and resets on reload.
 
@@ -102,7 +136,7 @@ Mock state (invites, deletions) lives in page memory and resets on reload.
 
 ## Testing
 
-122 tests across three layers: pure functions, endpoint contracts, and route
+131 tests across three layers: pure functions, endpoint contracts, and route
 integration against the real MSW handlers.
 
 ```bash
@@ -145,6 +179,56 @@ Devtools never render under test — `__root.tsx` gates on
 `import.meta.env.MODE !== "test"` so the trigger cannot interfere with the
 integration tests' `getByRole` queries.
 
+## Localization
+
+English and Arabic ship in the box, with full RTL. The switcher lives in the
+sidebar user menu (`src/components/layout/nav-user.tsx`); the choice persists to
+`localStorage` under `dashboard.locale`.
+
+```
+src/lib/i18n.ts                          # i18next init, SUPPORTED_LOCALES, DEFAULT_LOCALE
+src/locales/{en,ar}/translation.json     # the two resource bundles
+src/features/locale/store.ts             # zustand: locale + setLocale + selectDir
+src/components/layout/locale-provider.tsx  # syncs <html dir|lang> + Radix direction
+```
+
+Four things worth knowing before you touch it:
+
+- **Resources are bundled and init is synchronous.** No HTTP backend, no
+  browser-language detection. That is what lets tests assert on translated text
+  without a `waitFor` on i18n readiness.
+- **The store owns the choice, i18next mirrors it.** `useLocaleStore` is the
+  source of truth and `i18next.changeLanguage` is a side effect of `setLocale`
+  — the same shape as `theme-provider.tsx`, where the DOM is derived state.
+- **Radix needs its own direction context.** Radix primitives do not read the
+  inherited `<html dir>`; without `Direction.Provider` they stamp `dir="ltr"` on
+  their own root and override the document. `LocaleProvider` feeds the context
+  once, which fixes every primitive at a stroke (Tabs was the visible offender —
+  it wraps the dashboard table).
+- **Dates stay Latin-numeraled.** `formatDate` in `src/lib/utils.ts` passes
+  `numberingSystem: "latn"`, so Arabic renders Gregorian dates in ASCII digits
+  rather than Eastern Arabic ones. Drop the option if you want ٢٠٢٦.
+
+Arabic text renders in **Noto Sans Arabic**: `src/index.css` swaps
+`--font-family-sans` under `[dir="rtl"]` and falls back to Geist for any Latin
+runs inside Arabic copy.
+
+### Adding a string
+
+Add the key to **both** `translation.json` files — `src/locales/en` and
+`src/locales/ar` are checked for parity, and a key missing from `ar` silently
+falls back to English rather than failing. Then read it with `useTranslation()`.
+Prefer nesting by feature (`users.invite.title`) over flat keys.
+
+### Adding a locale
+
+1. Add the code to `SUPPORTED_LOCALES` in `src/lib/i18n.ts` and drop a
+   `src/locales/<code>/translation.json` beside the others.
+2. Register it in `resources` in the same file.
+3. If it is right-to-left, add it to `RTL_LOCALES` in
+   `src/features/locale/store.ts` — `selectDir` and everything downstream of it
+   follow automatically.
+
 ## Folder structure
 
 Feature-based, not type-based.
@@ -165,10 +249,10 @@ src/
     _protected.tsx              # auth guard + sidebar shell
     _protected/
       dashboard.tsx
-      services.tsx              # superadmin only
-      requests.tsx              # superadmin only
-      card-payments.tsx         # superadmin only
-      users.tsx                 # superadmin only
+      services.tsx              # SUPERADMIN only
+      requests.tsx              # SUPERADMIN only
+      card-payments.tsx         # SUPERADMIN only
+      users.tsx                 # SUPERADMIN only
       settings.tsx
 
   features/
@@ -190,6 +274,8 @@ src/
       api/users-api.ts
       hooks/use-users.ts
       components/               # users-table, invite dialog, delete dialog, badge
+    locale/
+      store.ts                  # zustand: locale, setLocale, selectDir
     services/                   # placeholder list page
     requests/                   # placeholder list page
     card-payments/              # placeholder list page
@@ -201,9 +287,14 @@ src/
   components/
     ui/                         # vendored shadcn primitives — avoid editing
     layout/                     # app-sidebar, nav-*, site-header, theme,
-                                # not-found, route-error, full-page-loader
+                                # locale-provider, not-found, route-error,
+                                # full-page-loader
     shared/                     # cross-feature composites: page-header,
                                 # table-pagination, table-skeleton, status-badge
+
+  locales/
+    en/translation.json         # the two resource bundles; keys must stay
+    ar/translation.json         # in parity
 
   lib/
     api-client.ts               # axios + auth interceptors + refresh queue
@@ -211,7 +302,8 @@ src/
     pagination.ts               # paginatedSchema(), PaginationParams, defaults
     query-client.ts             # QueryClient defaults
     token-storage.ts            # the only module that knows where tokens live
-    utils.ts                    # cn()
+    i18n.ts                     # i18next init + SUPPORTED_LOCALES
+    utils.ts                    # cn(), formatDate()
 
   test/                         # harness: setup, MSW server, renderRoute()
 

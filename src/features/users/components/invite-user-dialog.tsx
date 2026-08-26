@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { PlusIcon } from "lucide-react"
 import { useId, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -26,11 +27,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ROLE_VALUES, ROLES, roleLabel } from "@/features/auth/roles"
+import { DASHBOARD_ROLES, ROLES, roleLabel } from "@/features/auth/roles"
 import { useInviteUser } from "../hooks/use-users"
 import { type InviteUserInput, inviteUserSchema } from "../schemas"
 
 export function InviteUserDialog() {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const inviteUser = useInviteUser()
   const formId = useId()
@@ -39,8 +41,8 @@ export function InviteUserDialog() {
   const roleId = useId()
 
   const form = useForm<InviteUserInput>({
-    resolver: zodResolver(inviteUserSchema),
-    defaultValues: { email: "", name: "", role: ROLES.PROFICIENT },
+    resolver: zodResolver(inviteUserSchema()),
+    defaultValues: { email: "", name: "", role: ROLES.STAFF },
   })
 
   const onSubmit = (values: InviteUserInput) => {
@@ -63,15 +65,13 @@ export function InviteUserDialog() {
       <DialogTrigger asChild>
         <Button size="sm">
           <PlusIcon />
-          Invite user
+          {t("users.invite.trigger")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Invite a user</DialogTitle>
-          <DialogDescription>
-            They'll receive an email with a link to set their password.
-          </DialogDescription>
+          <DialogTitle>{t("users.invite.title")}</DialogTitle>
+          <DialogDescription>{t("users.invite.description")}</DialogDescription>
         </DialogHeader>
 
         <form id={formId} onSubmit={form.handleSubmit(onSubmit)} noValidate>
@@ -81,11 +81,13 @@ export function InviteUserDialog() {
               name="name"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={nameId}>Name</FieldLabel>
+                  <FieldLabel htmlFor={nameId}>
+                    {t("users.invite.nameLabel")}
+                  </FieldLabel>
                   <Input
                     {...field}
                     id={nameId}
-                    placeholder="Ada Lovelace"
+                    placeholder={t("users.invite.namePlaceholder")}
                     aria-invalid={fieldState.invalid}
                   />
                   {fieldState.invalid ? (
@@ -100,13 +102,15 @@ export function InviteUserDialog() {
               name="email"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={emailId}>Email</FieldLabel>
+                  <FieldLabel htmlFor={emailId}>
+                    {t("users.invite.emailLabel")}
+                  </FieldLabel>
                   <Input
                     {...field}
                     id={emailId}
                     type="email"
                     autoComplete="off"
-                    placeholder="ada@example.com"
+                    placeholder={t("users.invite.emailPlaceholder")}
                     aria-invalid={fieldState.invalid}
                   />
                   {fieldState.invalid ? (
@@ -121,13 +125,17 @@ export function InviteUserDialog() {
               name="role"
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={roleId}>Role</FieldLabel>
+                  <FieldLabel htmlFor={roleId}>
+                    {t("users.invite.roleLabel")}
+                  </FieldLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id={roleId} className="w-full">
-                      <SelectValue placeholder="Select a role" />
+                      <SelectValue
+                        placeholder={t("users.invite.rolePlaceholder")}
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      {ROLE_VALUES.map((role) => (
+                      {DASHBOARD_ROLES.map((role) => (
                         <SelectItem key={role} value={role}>
                           {roleLabel(role)}
                         </SelectItem>
@@ -145,7 +153,9 @@ export function InviteUserDialog() {
 
         <DialogFooter>
           <Button type="submit" form={formId} disabled={inviteUser.isPending}>
-            {inviteUser.isPending ? "Sending…" : "Send invite"}
+            {inviteUser.isPending
+              ? t("users.invite.submitting")
+              : t("users.invite.submit")}
           </Button>
         </DialogFooter>
       </DialogContent>

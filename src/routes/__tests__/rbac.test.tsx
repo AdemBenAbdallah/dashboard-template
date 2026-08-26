@@ -1,7 +1,7 @@
 import { screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 import { ROLES, type Role } from "@/features/auth/roles"
-import { currentPath, renderRoute } from "@/test/utils"
+import { currentPath, renderRoute, type SeededRole } from "@/test/utils"
 
 /**
  * The authorization matrix.
@@ -14,15 +14,16 @@ import { currentPath, renderRoute } from "@/test/utils"
  * server-side, and `contract.test.ts` plus the 403 cases below cover that.
  */
 const PROTECTED_ROUTES = [
-  { path: "/dashboard", allowed: [ROLES.SUPERADMIN, ROLES.PROFICIENT] },
-  { path: "/settings", allowed: [ROLES.SUPERADMIN, ROLES.PROFICIENT] },
+  { path: "/dashboard", allowed: [ROLES.SUPERADMIN, ROLES.STAFF] },
+  { path: "/settings", allowed: [ROLES.SUPERADMIN, ROLES.STAFF] },
   { path: "/users", allowed: [ROLES.SUPERADMIN] },
   { path: "/services", allowed: [ROLES.SUPERADMIN] },
   { path: "/requests", allowed: [ROLES.SUPERADMIN] },
   { path: "/card-payments", allowed: [ROLES.SUPERADMIN] },
 ] as const
 
-const ALL_ROLES: Role[] = [ROLES.SUPERADMIN, ROLES.PROFICIENT]
+/** The dashboard roles the mock API has accounts for. */
+const ALL_ROLES: SeededRole[] = [ROLES.SUPERADMIN, ROLES.STAFF]
 
 describe("unauthenticated access", () => {
   it.each(PROTECTED_ROUTES.map((r) => r.path))(
@@ -77,8 +78,8 @@ describe("sidebar navigation reflects the role", () => {
     }
   })
 
-  it("hides restricted links from a proficient user", async () => {
-    await renderRoute("/dashboard", { as: ROLES.PROFICIENT })
+  it("hides restricted links from a staff user", async () => {
+    await renderRoute("/dashboard", { as: ROLES.STAFF })
 
     // The permitted ones are present...
     expect(await screen.findByRole("link", { name: "Dashboard" })).toBeVisible()

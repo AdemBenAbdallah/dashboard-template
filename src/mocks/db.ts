@@ -1,53 +1,123 @@
 import { ROLES, type Role } from "@/features/auth/roles"
-import type { User } from "@/features/auth/schemas"
 
 /**
  * In-memory database for the mock API.
  *
  * State lives for the lifetime of the tab: invites and deletes are visible
  * until reload, then the seed is restored.
+ *
+ * Records are stored in the *backend's* `UserDto` shape (`pubkey`,
+ * `firstName`/`lastName`, uppercase roles) rather than the app's `User` model,
+ * so the handlers exercise the same parse/transform path as the real API and
+ * `contract.test.ts` stays a genuine contract check.
  */
 
-export interface SeedAccount extends User {
+/** `UserDto` as served by iris-backend. */
+export interface ApiUser {
+  pubkey: string
+  email: string
+  firstName: string
+  lastName: string
+  role: Role
+  image: { path: string } | null
+  phone: string
+  status: "ACTIVE" | "INACTIVE" | "BLOCKED" | "DELETED"
+  emailVerifiedAt: string | null
+  phoneVerifiedAt: string | null
+  createdAt: string
+  lastLogin: string | null
+}
+
+/**
+ * The subset `/auth/profile` actually serves.
+ *
+ * `UserDto` also declares `isEmailVerified`/`isPhoneVerified`, but nothing
+ * backs those names on the entity so `ClassSerializerInterceptor` drops them —
+ * the real response carries no verification state at all.
+ */
+export type ApiProfile = Omit<ApiUser, "emailVerifiedAt" | "phoneVerifiedAt">
+
+export interface SeedAccount extends ApiUser {
   password: string
 }
 
 const SEED_ACCOUNTS: readonly SeedAccount[] = [
   {
-    id: "usr_001",
+    pubkey: "usr_001",
     email: "admin@acme.test",
     password: "password123",
-    name: "Avery Stone",
+    firstName: "Avery",
+    lastName: "Stone",
     role: ROLES.SUPERADMIN,
-    avatarUrl: null,
+    image: null,
+    phone: "+966500000001",
+    status: "ACTIVE",
+    emailVerifiedAt: "2024-01-20T09:00:00.000Z",
+    phoneVerifiedAt: "2024-01-20T09:00:00.000Z",
     createdAt: "2024-01-15T09:00:00.000Z",
+    lastLogin: "2024-08-01T09:00:00.000Z",
   },
   {
-    id: "usr_002",
+    pubkey: "usr_002",
     email: "user@acme.test",
     password: "password123",
-    name: "Blake Rivera",
-    role: ROLES.PROFICIENT,
-    avatarUrl: null,
+    firstName: "Blake",
+    lastName: "Rivera",
+    role: ROLES.STAFF,
+    image: null,
+    phone: "+966500000002",
+    status: "ACTIVE",
+    emailVerifiedAt: "2024-01-20T09:00:00.000Z",
+    phoneVerifiedAt: "2024-01-20T09:00:00.000Z",
     createdAt: "2024-03-02T11:30:00.000Z",
+    lastLogin: null,
   },
   {
-    id: "usr_003",
+    pubkey: "usr_003",
     email: "casey@acme.test",
     password: "password123",
-    name: "Casey Nguyen",
-    role: ROLES.PROFICIENT,
-    avatarUrl: null,
+    firstName: "Casey",
+    lastName: "Nguyen",
+    role: ROLES.STAFF,
+    image: null,
+    phone: "+966500000003",
+    status: "ACTIVE",
+    emailVerifiedAt: "2024-01-20T09:00:00.000Z",
+    phoneVerifiedAt: "2024-01-20T09:00:00.000Z",
     createdAt: "2024-05-21T14:45:00.000Z",
+    lastLogin: null,
   },
   {
-    id: "usr_004",
+    pubkey: "usr_004",
     email: "dana@acme.test",
     password: "password123",
-    name: "Dana Whitfield",
+    firstName: "Dana",
+    lastName: "Whitfield",
     role: ROLES.SUPERADMIN,
-    avatarUrl: null,
+    image: null,
+    phone: "+966500000004",
+    status: "ACTIVE",
+    emailVerifiedAt: "2024-01-20T09:00:00.000Z",
+    phoneVerifiedAt: null,
     createdAt: "2024-07-08T08:15:00.000Z",
+    lastLogin: null,
+  },
+  {
+    // Authenticates successfully but has no business in the dashboard — this
+    // is what the DASHBOARD_ROLES check at login exists for.
+    pubkey: "usr_005",
+    email: "customer@acme.test",
+    password: "password123",
+    firstName: "Emery",
+    lastName: "Sadiq",
+    role: ROLES.CUSTOMER,
+    image: null,
+    phone: "+966500000005",
+    status: "ACTIVE",
+    emailVerifiedAt: "2024-01-20T09:00:00.000Z",
+    phoneVerifiedAt: "2024-01-20T09:00:00.000Z",
+    createdAt: "2024-09-11T10:00:00.000Z",
+    lastLogin: null,
   },
 ]
 
@@ -56,14 +126,14 @@ export const accounts: SeedAccount[] = SEED_ACCOUNTS.map((account) => ({
 }))
 
 /**
- * Opaque tokens, keyed to a user id. Nothing here is cryptography.
+ * Opaque tokens, keyed to a user's pubkey. Nothing here is cryptography.
  *
- * The maps live in page memory, so they are empty after a reload. A refresh
- * token therefore also *encodes* its user id, and `rotateTokens` falls back to
- * parsing it — otherwise every page reload would log the user out and the
+ * The maps live in page memory, so they are empty after a reload. A token
+ * therefore also *encodes* its user id, and the lookups fall back to parsing
+ * it — otherwise every page reload would log the user out and the
  * session-bootstrap path would be impossible to exercise in development.
- * `revokedTokens` still wins, so rotation and logout behave correctly within a
- * session. A real API would verify a signature here instead.
+ * `revokedTokens` still wins, so logout behaves correctly within a session. A
+ * real API would verify a signature here instead.
  */
 const accessTokens = new Map<string, string>()
 const refreshTokens = new Map<string, string>()
@@ -71,59 +141,82 @@ const revokedTokens = new Set<string>()
 
 let tokenCounter = 0
 
-function mintToken(prefix: string, userId: string): string {
+function mintToken(prefix: string, pubkey: string): string {
   tokenCounter += 1
-  return `${prefix}_${userId}_${tokenCounter}_${Date.now()}`
+  return `${prefix}_${pubkey}_${tokenCounter}_${Date.now()}`
 }
 
-/** Recovers the user id baked into a token minted in a previous page load. */
-function userIdFromToken(token: string): string | undefined {
-  const match = /^rt_(usr_\d+)_\d+_\d+$/.exec(token)
+/** Recovers the pubkey baked into a token minted in a previous page load. */
+function pubkeyFromToken(
+  token: string,
+  prefix: "at" | "rt",
+): string | undefined {
+  const match = new RegExp(`^${prefix}_(usr_\\d+)_\\d+_\\d+$`).exec(token)
   if (!match) return undefined
-  const userId = match[1]
-  return accounts.some((account) => account.id === userId) ? userId : undefined
+  const pubkey = match[1]
+  return accounts.some((account) => account.pubkey === pubkey)
+    ? pubkey
+    : undefined
 }
 
-export function issueTokens(userId: string): {
-  accessToken: string
-  refreshToken: string
+/** Mirrors `TokenResponseDto`: snake_case, with lifetimes alongside. */
+export function issueTokens(pubkey: string): {
+  access_token: string
+  expires_in: string
+  refresh_token: string
+  refresh_expires_in: string
 } {
-  const accessToken = mintToken("at", userId)
-  const refreshToken = mintToken("rt", userId)
-  accessTokens.set(accessToken, userId)
-  refreshTokens.set(refreshToken, userId)
-  return { accessToken, refreshToken }
+  const accessToken = mintToken("at", pubkey)
+  const refreshToken = mintToken("rt", pubkey)
+  accessTokens.set(accessToken, pubkey)
+  refreshTokens.set(refreshToken, pubkey)
+  // The lifetimes really are strings on the wire — the server echoes the raw
+  // `JWT_EXPIRATION_TIME` / `REFRESH_TOKEN_EXPIRATION` config values.
+  return {
+    access_token: accessToken,
+    expires_in: "30d",
+    refresh_token: refreshToken,
+    refresh_expires_in: "40d",
+  }
 }
 
-/** Rotates the refresh token, mirroring what a real API should do. */
-export function rotateTokens(refreshToken: string): {
-  accessToken: string
-  refreshToken: string
-} | null {
+/**
+ * Issues a fresh access token against a refresh token.
+ *
+ * Deliberately does *not* rotate the refresh token: the backend's
+ * `refreshTokenUser` returns `{ access_token }` alone and leaves the stored
+ * refresh token valid. Mocking rotation here would hide a real client bug.
+ */
+export function refreshAccessToken(
+  refreshToken: string,
+): { access_token: string } | null {
   if (revokedTokens.has(refreshToken)) return null
 
-  const userId =
-    refreshTokens.get(refreshToken) ?? userIdFromToken(refreshToken)
-  if (!userId) return null
+  const pubkey =
+    refreshTokens.get(refreshToken) ?? pubkeyFromToken(refreshToken, "rt")
+  if (!pubkey) return null
 
-  refreshTokens.delete(refreshToken)
-  revokedTokens.add(refreshToken)
-  return issueTokens(userId)
+  const accessToken = mintToken("at", pubkey)
+  accessTokens.set(accessToken, pubkey)
+  return { access_token: accessToken }
 }
 
-export function revokeRefreshToken(refreshToken: string | undefined): void {
-  if (!refreshToken) return
-  refreshTokens.delete(refreshToken)
-  revokedTokens.add(refreshToken)
+export function revokeTokensFor(pubkey: string): void {
+  for (const [token, owner] of refreshTokens) {
+    if (owner === pubkey) {
+      refreshTokens.delete(token)
+      revokedTokens.add(token)
+    }
+  }
 }
 
 export function findAccountByCredentials(
-  email: string,
+  identifier: string,
   password: string,
 ): SeedAccount | undefined {
   return accounts.find(
     (account) =>
-      account.email.toLowerCase() === email.toLowerCase() &&
+      account.email.toLowerCase() === identifier.toLowerCase() &&
       account.password === password,
   )
 }
@@ -134,14 +227,26 @@ export function resolveCaller(
 ): SeedAccount | undefined {
   if (!authorization?.startsWith("Bearer ")) return undefined
   const token = authorization.slice("Bearer ".length)
-  const userId = accessTokens.get(token)
-  if (!userId) return undefined
-  return accounts.find((account) => account.id === userId)
+  const pubkey = accessTokens.get(token) ?? pubkeyFromToken(token, "at")
+  if (!pubkey) return undefined
+  return accounts.find((account) => account.pubkey === pubkey)
 }
 
-export function toPublicUser(account: SeedAccount): User {
+/** What `/auth/signin` returns: the raw entity, timestamps and all. */
+export function toPublicUser(account: SeedAccount): ApiUser {
   const { password: _password, ...user } = account
   return user
+}
+
+/** What `/auth/profile` returns: the DTO subset, with no verification state. */
+export function toProfile(account: SeedAccount): ApiProfile {
+  const {
+    password: _password,
+    emailVerifiedAt: _emailVerifiedAt,
+    phoneVerifiedAt: _phoneVerifiedAt,
+    ...profile
+  } = account
+  return profile
 }
 
 export function addAccount(input: {
@@ -149,21 +254,28 @@ export function addAccount(input: {
   name: string
   role: Role
 }): SeedAccount {
+  const [firstName, ...rest] = input.name.trim().split(/\s+/)
   const account: SeedAccount = {
-    id: `usr_${String(accounts.length + 1).padStart(3, "0")}`,
+    pubkey: `usr_${String(accounts.length + 1).padStart(3, "0")}`,
     email: input.email,
-    name: input.name,
+    firstName: firstName ?? "",
+    lastName: rest.join(" "),
     role: input.role,
     password: "password123",
-    avatarUrl: null,
+    image: null,
+    phone: "",
+    status: "ACTIVE",
+    emailVerifiedAt: null,
+    phoneVerifiedAt: null,
     createdAt: new Date().toISOString(),
+    lastLogin: null,
   }
   accounts.push(account)
   return account
 }
 
-export function removeAccount(id: string): boolean {
-  const index = accounts.findIndex((account) => account.id === id)
+export function removeAccount(pubkey: string): boolean {
+  const index = accounts.findIndex((account) => account.pubkey === pubkey)
   if (index === -1) return false
   accounts.splice(index, 1)
   return true

@@ -1,6 +1,8 @@
 import { RouterProvider } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { FullPageLoader } from "@/components/layout/full-page-loader"
+import { LocaleProvider } from "@/components/layout/locale-provider"
 import { ThemeProvider } from "@/components/layout/theme-provider"
 import { bootstrapSession } from "@/features/auth/api/auth-api"
 import { useAuthStore } from "@/features/auth/store"
@@ -10,6 +12,7 @@ import { router } from "@/router"
 import { AppProviders } from "./app-providers"
 
 export function App() {
+  const { t } = useTranslation()
   // `false` until the refresh-token exchange has settled. The router is not
   // mounted before then, so `_protected`'s guard never sees a half-restored
   // session and never flashes /login at a user who is actually signed in.
@@ -45,9 +48,11 @@ export function App() {
 
   if (!isBootstrapped) {
     return (
-      <ThemeProvider>
-        <FullPageLoader label="Restoring your session…" />
-      </ThemeProvider>
+      <LocaleProvider>
+        <ThemeProvider>
+          <FullPageLoader label={t("common.restoringSession")} />
+        </ThemeProvider>
+      </LocaleProvider>
     )
   }
 

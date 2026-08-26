@@ -8,7 +8,7 @@ import { render, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { AppProviders } from "@/app-providers"
 import { login } from "@/features/auth/api/auth-api"
-import { ROLES, type Role } from "@/features/auth/roles"
+import { ROLES } from "@/features/auth/roles"
 import type { Session } from "@/features/auth/schemas"
 import { useAuthStore } from "@/features/auth/store"
 import { routeTree } from "@/routeTree.gen"
@@ -29,21 +29,33 @@ export function createTestQueryClient(): QueryClient {
   })
 }
 
+/**
+ * The roles that have a seeded account in `src/mocks/db.ts`.
+ *
+ * Not every role in `ROLES` is seeded — the backend has seven and the
+ * dashboard only ever needs to sign in as a few of them.
+ */
+export type SeededRole =
+  | typeof ROLES.SUPERADMIN
+  | typeof ROLES.STAFF
+  | typeof ROLES.CUSTOMER
+
 /** Seed credentials, mirroring `src/mocks/db.ts`. */
 export const TEST_CREDENTIALS: Record<
-  Role,
+  SeededRole,
   { email: string; password: string }
 > = {
   [ROLES.SUPERADMIN]: { email: "admin@acme.test", password: "password123" },
-  [ROLES.PROFICIENT]: { email: "user@acme.test", password: "password123" },
+  [ROLES.STAFF]: { email: "user@acme.test", password: "password123" },
+  [ROLES.CUSTOMER]: { email: "customer@acme.test", password: "password123" },
 }
 
 /**
- * Signs in through the real `/auth/login` endpoint rather than poking the
+ * Signs in through the real `/auth/signin` endpoint rather than poking the
  * store, so the session holds tokens the mock API will actually accept on
  * subsequent requests.
  */
-export async function signIn(role: Role): Promise<Session> {
+export async function signIn(role: SeededRole): Promise<Session> {
   const session = await login(TEST_CREDENTIALS[role])
   useAuthStore.getState().setSession(session)
   return session
@@ -51,7 +63,7 @@ export async function signIn(role: Role): Promise<Session> {
 
 interface RenderRouteOptions {
   /** Sign in as this role before mounting. Omit to stay anonymous. */
-  as?: Role
+  as?: SeededRole
   queryClient?: QueryClient
 }
 
@@ -85,9 +97,19 @@ export async function renderRoute(
   )
 
   // Wait for guards and loaders to settle so assertions see the final route.
-  await waitFor(() => {
-    if (router.state.status !== "idle") throw new Error("router still pending")
-  })
+  //
+  // The timeout is well above `waitFor`'s 1s default on purpose: the first
+  // mount of a heavy route pays for its code-split chunk plus its loader, which
+  // alone is ~600ms for /dashboard and more when the suite runs its files in
+  // parallel. A tight budget here fails on machine load, not on a real defect.
+  await waitFor(
+    () => {
+      if (router.state.status !== "idle") {
+        throw new Error("router still pending")
+      }
+    },
+    { timeout: 10_000 },
+  )
 
   return { router, queryClient, user }
 }

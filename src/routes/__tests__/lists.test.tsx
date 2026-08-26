@@ -5,7 +5,8 @@ import { ROLES } from "@/features/auth/roles"
 import { server } from "@/test/server"
 import { renderRoute } from "@/test/utils"
 
-const API = "http://localhost/api"
+/** Absolute, and pinned in vitest.config.ts — see the note there. */
+const API = import.meta.env.VITE_API_URL
 
 const LIST_PAGES = [
   {
@@ -70,7 +71,7 @@ describe.each(LIST_PAGES)("$heading list page", (page) => {
 
 describe("dashboard", () => {
   it("renders stat cards, the chart and the data table", async () => {
-    await renderRoute("/dashboard", { as: ROLES.PROFICIENT })
+    await renderRoute("/dashboard", { as: ROLES.STAFF })
 
     expect(await screen.findByText("Total Revenue")).toBeVisible()
     expect(screen.getByText("Total Visitors")).toBeVisible()
@@ -83,7 +84,7 @@ describe("dashboard", () => {
    * visible layout jump.
    */
   it("keeps the table mounted while the next page loads", async () => {
-    const { user } = await renderRoute("/dashboard", { as: ROLES.PROFICIENT })
+    const { user } = await renderRoute("/dashboard", { as: ROLES.STAFF })
 
     await screen.findByRole("table")
     await user.click(screen.getByRole("button", { name: /go to next page/i }))

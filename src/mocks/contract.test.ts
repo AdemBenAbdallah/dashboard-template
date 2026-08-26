@@ -29,7 +29,7 @@ async function asSuperadmin() {
 }
 
 describe("auth endpoints", () => {
-  it("POST /auth/login matches the session schema", async () => {
+  it("POST /auth/signin matches the session schema", async () => {
     const session = await login(TEST_CREDENTIALS[ROLES.SUPERADMIN])
     expect(session.user.role).toBe(ROLES.SUPERADMIN)
     expect(session.accessToken).toBeTruthy()
@@ -41,9 +41,9 @@ describe("auth endpoints", () => {
     expect(session.user).not.toHaveProperty("password")
   })
 
-  it("GET /auth/me matches the user schema", async () => {
+  it("GET /auth/profile matches the user schema", async () => {
     await asSuperadmin()
-    const response = await apiClient.get("/auth/me")
+    const response = await apiClient.get("/auth/profile")
     expect(() => userSchema.parse(response.data)).not.toThrow()
     expect(response.data).not.toHaveProperty("password")
   })

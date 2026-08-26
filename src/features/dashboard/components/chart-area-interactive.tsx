@@ -1,4 +1,9 @@
 import { type ReactNode, useEffect } from "react"
+import { useTranslation } from "react-i18next"
+// Recharts does not support RTL mirroring, so this chart always renders
+// left-to-right (oldest -> newest, left -> right) even when the app locale is
+// Arabic. Only the surrounding chrome (card title, range labels, tooltip
+// text) is translated.
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import {
   Card,
@@ -23,6 +28,7 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { useLocaleStore } from "@/features/locale/store"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { type ChartPoint, type ChartRange, chartRangeSchema } from "../schemas"
 
@@ -32,29 +38,20 @@ const chartConfig = {
   mobile: { label: "Mobile", color: "var(--primary)" },
 } satisfies ChartConfig
 
-const RANGE_LABELS: Record<ChartRange, string> = {
-  "90d": "Last 3 months",
-  "30d": "Last 30 days",
-  "7d": "Last 7 days",
+const RANGE_LABEL_KEY: Record<ChartRange, string> = {
+  "90d": "dashboard.ranges.90d",
+  "30d": "dashboard.ranges.30d",
+  "7d": "dashboard.ranges.7d",
 }
 
 const RANGE_ORDER: ChartRange[] = ["90d", "30d", "7d"]
 
-function formatDay(value: string | number) {
-  return new Date(value).toLocaleDateString("en-US", {
+function formatDay(value: string | number, locale: string) {
+  return new Date(value).toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
+    numberingSystem: "latn",
   })
-}
-
-/**
- * Recharts types the tooltip label as `ReactNode`, so narrow before formatting
- * and pass anything unexpected straight through.
- */
-function formatTooltipLabel(label: ReactNode): ReactNode {
-  return typeof label === "string" || typeof label === "number"
-    ? formatDay(label)
-    : label
 }
 
 interface ChartAreaInteractiveProps {
@@ -71,6 +68,8 @@ export function ChartAreaInteractive({
   onRangeChange,
   isFetching = false,
 }: ChartAreaInteractiveProps) {
+  const { t } = useTranslation()
+  const locale = useLocaleStore((state) => state.locale)
   const isMobile = useIsMobile()
 
   useEffect(() => {
@@ -84,15 +83,28 @@ export function ChartAreaInteractive({
     if (parsed.success) onRangeChange(parsed.data)
   }
 
+  /**
+   * Recharts types the tooltip label as `ReactNode`, so narrow before
+   * formatting and pass anything unexpected straight through.
+   */
+  const formatTooltipLabel = (label: ReactNode): ReactNode =>
+    typeof label === "string" || typeof label === "number"
+      ? formatDay(label, locale)
+      : label
+
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardTitle>Total Visitors</CardTitle>
+        <CardTitle>{t("dashboard.chart.title")}</CardTitle>
         <CardDescription>
           <span className="hidden @[540px]/card:block">
-            Total for the {RANGE_LABELS[range].toLowerCase()}
+            {t("dashboard.chart.descriptionFull", {
+              range: t(RANGE_LABEL_KEY[range]).toLowerCase(),
+            })}
           </span>
-          <span className="@[540px]/card:hidden">{RANGE_LABELS[range]}</span>
+          <span className="@[540px]/card:hidden">
+            {t(RANGE_LABEL_KEY[range])}
+          </span>
         </CardDescription>
         <CardAction>
           <ToggleGroup
@@ -104,7 +116,7 @@ export function ChartAreaInteractive({
           >
             {RANGE_ORDER.map((value) => (
               <ToggleGroupItem key={value} value={value}>
-                {RANGE_LABELS[value]}
+                {t(RANGE_LABEL_KEY[value])}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
@@ -112,14 +124,14 @@ export function ChartAreaInteractive({
             <SelectTrigger
               className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
               size="sm"
-              aria-label="Select a time range"
+              aria-label={t("dashboard.chart.selectTimeRangeAriaLabel")}
             >
-              <SelectValue placeholder="Last 3 months" />
+              <SelectValue placeholder={t(RANGE_LABEL_KEY["90d"])} />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
               {RANGE_ORDER.map((value) => (
                 <SelectItem key={value} value={value} className="rounded-lg">
-                  {RANGE_LABELS[value]}
+                  {t(RANGE_LABEL_KEY[value])}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -167,7 +179,7 @@ export function ChartAreaInteractive({
               axisLine={false}
               tickMargin={8}
               minTickGap={32}
-              tickFormatter={formatDay}
+              tickFormatter={(value) => formatDay(value, locale)}
             />
             <ChartTooltip
               cursor={false}

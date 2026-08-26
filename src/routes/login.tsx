@@ -1,6 +1,8 @@
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router"
 import { CommandIcon } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
+import { Ltr } from "@/components/shared/ltr"
 import {
   Card,
   CardContent,
@@ -32,6 +34,7 @@ export const Route = createFileRoute("/login")({
 })
 
 function LoginPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const search = Route.useSearch()
 
@@ -47,14 +50,14 @@ function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-6 flex items-center justify-center gap-2">
           <CommandIcon className="size-5" />
-          <span className="font-semibold text-lg">Acme Inc.</span>
+          <span className="font-semibold text-lg">
+            <Ltr>Acme Inc.</Ltr>
+          </span>
         </div>
         <Card>
           <CardHeader>
-            <CardTitle>Sign in</CardTitle>
-            <CardDescription>
-              Enter your credentials to access the dashboard.
-            </CardDescription>
+            <CardTitle>{t("auth.login.title")}</CardTitle>
+            <CardDescription>{t("auth.login.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             <LoginForm onSuccess={handleSuccess} />

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import { StatusBadge, type StatusTone } from "@/components/shared/status-badge"
 import {
   Table,
@@ -7,15 +8,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useLocaleStore } from "@/features/locale/store"
+import { formatDate } from "@/lib/utils"
 import type { RequestPriority, RequestStatus, ServiceRequest } from "../schemas"
 
-export const REQUEST_COLUMNS = [
-  "Reference",
-  "Subject",
-  "Requester",
-  "Priority",
-  "Status",
-  "Created",
+export const REQUEST_COLUMN_KEYS = [
+  "requests.columns.reference",
+  "requests.columns.subject",
+  "requests.columns.requester",
+  "requests.columns.priority",
+  "requests.columns.status",
+  "requests.columns.created",
 ] as const
 
 const STATUS_TONE: Record<RequestStatus, StatusTone> = {
@@ -25,11 +28,11 @@ const STATUS_TONE: Record<RequestStatus, StatusTone> = {
   closed: "neutral",
 }
 
-const STATUS_LABEL: Record<RequestStatus, string> = {
-  open: "Open",
-  in_progress: "In progress",
-  resolved: "Resolved",
-  closed: "Closed",
+const STATUS_LABEL_KEY: Record<RequestStatus, string> = {
+  open: "requests.status.open",
+  in_progress: "requests.status.in_progress",
+  resolved: "requests.status.resolved",
+  closed: "requests.status.closed",
 }
 
 const PRIORITY_TONE: Record<RequestPriority, StatusTone> = {
@@ -39,21 +42,24 @@ const PRIORITY_TONE: Record<RequestPriority, StatusTone> = {
   urgent: "danger",
 }
 
-const PRIORITY_LABEL: Record<RequestPriority, string> = {
-  low: "Low",
-  medium: "Medium",
-  high: "High",
-  urgent: "Urgent",
+const PRIORITY_LABEL_KEY: Record<RequestPriority, string> = {
+  low: "requests.priority.low",
+  medium: "requests.priority.medium",
+  high: "requests.priority.high",
+  urgent: "requests.priority.urgent",
 }
 
 export function RequestsTable({ requests }: { requests: ServiceRequest[] }) {
+  const { t } = useTranslation()
+  const locale = useLocaleStore((state) => state.locale)
+
   return (
     <div className="overflow-hidden rounded-lg border">
       <Table>
         <TableHeader className="bg-muted">
           <TableRow>
-            {REQUEST_COLUMNS.map((column) => (
-              <TableHead key={column}>{column}</TableHead>
+            {REQUEST_COLUMN_KEYS.map((key) => (
+              <TableHead key={key}>{t(key)}</TableHead>
             ))}
           </TableRow>
         </TableHeader>
@@ -61,10 +67,10 @@ export function RequestsTable({ requests }: { requests: ServiceRequest[] }) {
           {requests.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={REQUEST_COLUMNS.length}
+                colSpan={REQUEST_COLUMN_KEYS.length}
                 className="h-24 text-center text-muted-foreground"
               >
-                No requests yet.
+                {t("requests.empty")}
               </TableCell>
             </TableRow>
           ) : (
@@ -79,18 +85,16 @@ export function RequestsTable({ requests }: { requests: ServiceRequest[] }) {
                 </TableCell>
                 <TableCell>
                   <StatusBadge tone={PRIORITY_TONE[request.priority]}>
-                    {PRIORITY_LABEL[request.priority]}
+                    {t(PRIORITY_LABEL_KEY[request.priority])}
                   </StatusBadge>
                 </TableCell>
                 <TableCell>
                   <StatusBadge tone={STATUS_TONE[request.status]}>
-                    {STATUS_LABEL[request.status]}
+                    {t(STATUS_LABEL_KEY[request.status])}
                   </StatusBadge>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {new Date(request.createdAt).toLocaleDateString("en-US", {
-                    dateStyle: "medium",
-                  })}
+                  {formatDate(request.createdAt, locale)}
                 </TableCell>
               </TableRow>
             ))

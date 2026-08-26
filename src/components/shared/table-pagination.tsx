@@ -5,6 +5,7 @@ import {
   ChevronsRightIcon,
 } from "lucide-react"
 import { useId } from "react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
@@ -37,6 +38,7 @@ export function TablePagination({
   onChange,
   disabled = false,
 }: TablePaginationProps) {
+  const { t } = useTranslation()
   const pageSizeId = useId()
   const pages = pageCount(total, pageSize)
   const isFirst = page <= 1
@@ -45,13 +47,13 @@ export function TablePagination({
   return (
     <div className="flex items-center justify-between gap-4">
       <p className="hidden text-muted-foreground text-sm lg:block">
-        {total} {total === 1 ? "row" : "rows"}
+        {t("table.rowCount", { count: total })}
       </p>
 
       <div className="flex w-full items-center justify-between gap-6 lg:w-fit">
         <div className="flex items-center gap-2">
           <Label htmlFor={pageSizeId} className="font-medium text-sm">
-            Rows per page
+            {t("table.rowsPerPage")}
           </Label>
           <Select
             value={String(pageSize)}
@@ -76,7 +78,7 @@ export function TablePagination({
         </div>
 
         <p className="font-medium text-sm">
-          Page {page} of {pages}
+          {t("table.pageOf", { page, pages })}
         </p>
 
         <div className="flex items-center gap-1">
@@ -87,8 +89,8 @@ export function TablePagination({
             disabled={disabled || isFirst}
             onClick={() => onChange({ page: 1, pageSize })}
           >
-            <ChevronsLeftIcon />
-            <span className="sr-only">First page</span>
+            <ChevronsLeftIcon className="rtl:-scale-x-100" />
+            <span className="sr-only">{t("table.firstPage")}</span>
           </Button>
           <Button
             variant="outline"
@@ -97,8 +99,8 @@ export function TablePagination({
             disabled={disabled || isFirst}
             onClick={() => onChange({ page: page - 1, pageSize })}
           >
-            <ChevronLeftIcon />
-            <span className="sr-only">Previous page</span>
+            <ChevronLeftIcon className="rtl:-scale-x-100" />
+            <span className="sr-only">{t("table.previousPage")}</span>
           </Button>
           <Button
             variant="outline"
@@ -107,8 +109,8 @@ export function TablePagination({
             disabled={disabled || isLast}
             onClick={() => onChange({ page: page + 1, pageSize })}
           >
-            <ChevronRightIcon />
-            <span className="sr-only">Next page</span>
+            <ChevronRightIcon className="rtl:-scale-x-100" />
+            <span className="sr-only">{t("table.nextPage")}</span>
           </Button>
           <Button
             variant="outline"
@@ -117,8 +119,8 @@ export function TablePagination({
             disabled={disabled || isLast}
             onClick={() => onChange({ page: pages, pageSize })}
           >
-            <ChevronsRightIcon />
-            <span className="sr-only">Last page</span>
+            <ChevronsRightIcon className="rtl:-scale-x-100" />
+            <span className="sr-only">{t("table.lastPage")}</span>
           </Button>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2Icon } from "lucide-react"
 import { useId } from "react"
 import { Controller, useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { apiErrorMessage } from "@/lib/api-error"
-import { useLogin } from "../hooks/use-auth"
+import { DashboardAccessError, useLogin } from "../hooks/use-auth"
 import { type LoginInput, loginSchema } from "../schemas"
 
 export function LoginForm({
@@ -19,12 +20,13 @@ export function LoginForm({
 }: {
   onSuccess: () => void | Promise<void>
 }) {
+  const { t } = useTranslation()
   const login = useLogin()
   const emailId = useId()
   const passwordId = useId()
 
   const form = useForm<LoginInput>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(loginSchema()),
     defaultValues: { email: "", password: "" },
   })
 
@@ -34,8 +36,12 @@ export function LoginForm({
 
   // Field-level errors come from Zod via the resolver. This is the server's
   // answer — bad credentials, network down — shown above the submit button.
+  // A valid sign-in by an account without dashboard access is raised locally,
+  // so it carries its own message rather than a server one.
   const serverError = login.isError
-    ? apiErrorMessage(login.error, "Could not sign you in. Try again.")
+    ? login.error instanceof DashboardAccessError
+      ? login.error.message
+      : apiErrorMessage(login.error, t("auth.login.genericError"))
     : null
 
   return (
@@ -46,13 +52,16 @@ export function LoginForm({
           name="email"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={emailId}>Email</FieldLabel>
+              <FieldLabel htmlFor={emailId}>
+                {t("auth.login.emailLabel")}
+              </FieldLabel>
               <Input
                 {...field}
                 id={emailId}
                 type="email"
+                dir="ltr"
                 autoComplete="email"
-                placeholder="you@example.com"
+                placeholder={t("auth.login.emailPlaceholder")}
                 aria-invalid={fieldState.invalid}
                 disabled={login.isPending}
               />
@@ -68,11 +77,14 @@ export function LoginForm({
           name="password"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={passwordId}>Password</FieldLabel>
+              <FieldLabel htmlFor={passwordId}>
+                {t("auth.login.passwordLabel")}
+              </FieldLabel>
               <Input
                 {...field}
                 id={passwordId}
                 type="password"
+                dir="ltr"
                 autoComplete="current-password"
                 aria-invalid={fieldState.invalid}
                 disabled={login.isPending}
@@ -97,10 +109,10 @@ export function LoginForm({
           {login.isPending ? (
             <>
               <Loader2Icon className="animate-spin" />
-              Signing in…
+              {t("auth.login.submitting")}
             </>
           ) : (
-            "Sign in"
+            t("auth.login.submit")
           )}
         </Button>
       </FieldGroup>

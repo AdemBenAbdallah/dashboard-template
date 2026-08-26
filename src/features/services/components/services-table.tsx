@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import { StatusBadge, type StatusTone } from "@/components/shared/status-badge"
 import {
   Table,
@@ -7,14 +8,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useLocaleStore } from "@/features/locale/store"
+import { formatDate } from "@/lib/utils"
 import type { Service, ServiceStatus } from "../schemas"
 
-export const SERVICE_COLUMNS = [
-  "Service",
-  "Category",
-  "Status",
-  "Owner",
-  "Updated",
+export const SERVICE_COLUMN_KEYS = [
+  "services.columns.service",
+  "services.columns.category",
+  "services.columns.status",
+  "services.columns.owner",
+  "services.columns.updated",
 ] as const
 
 const STATUS_TONE: Record<ServiceStatus, StatusTone> = {
@@ -24,21 +27,24 @@ const STATUS_TONE: Record<ServiceStatus, StatusTone> = {
   offline: "danger",
 }
 
-const STATUS_LABEL: Record<ServiceStatus, string> = {
-  operational: "Operational",
-  degraded: "Degraded",
-  maintenance: "Maintenance",
-  offline: "Offline",
+const STATUS_LABEL_KEY: Record<ServiceStatus, string> = {
+  operational: "services.status.operational",
+  degraded: "services.status.degraded",
+  maintenance: "services.status.maintenance",
+  offline: "services.status.offline",
 }
 
 export function ServicesTable({ services }: { services: Service[] }) {
+  const { t } = useTranslation()
+  const locale = useLocaleStore((state) => state.locale)
+
   return (
     <div className="overflow-hidden rounded-lg border">
       <Table>
         <TableHeader className="bg-muted">
           <TableRow>
-            {SERVICE_COLUMNS.map((column) => (
-              <TableHead key={column}>{column}</TableHead>
+            {SERVICE_COLUMN_KEYS.map((key) => (
+              <TableHead key={key}>{t(key)}</TableHead>
             ))}
           </TableRow>
         </TableHeader>
@@ -46,10 +52,10 @@ export function ServicesTable({ services }: { services: Service[] }) {
           {services.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={SERVICE_COLUMNS.length}
+                colSpan={SERVICE_COLUMN_KEYS.length}
                 className="h-24 text-center text-muted-foreground"
               >
-                No services yet.
+                {t("services.empty")}
               </TableCell>
             </TableRow>
           ) : (
@@ -61,16 +67,14 @@ export function ServicesTable({ services }: { services: Service[] }) {
                 </TableCell>
                 <TableCell>
                   <StatusBadge tone={STATUS_TONE[service.status]}>
-                    {STATUS_LABEL[service.status]}
+                    {t(STATUS_LABEL_KEY[service.status])}
                   </StatusBadge>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {service.owner}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {new Date(service.updatedAt).toLocaleDateString("en-US", {
-                    dateStyle: "medium",
-                  })}
+                  {formatDate(service.updatedAt, locale)}
                 </TableCell>
               </TableRow>
             ))

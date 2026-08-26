@@ -16,10 +16,15 @@ export default mergeConfig(
       globals: true,
       setupFiles: ["./src/test/setup.ts"],
       // An absolute base so MSW's Node interceptor matches deterministically;
-      // a relative `/api` has no origin to resolve against outside a browser.
+      // a relative path has no origin to resolve against outside a browser.
       // Committed here rather than in `.env`, which is gitignored and so would
       // not exist in CI.
-      env: { VITE_API_URL: "http://localhost/api" },
+      //
+      // The `/v1/api` shape mirrors production: the Nest app uses URI
+      // versioning on top of `@Controller('api/...')`, so real routes are
+      // `/v1/api/auth/...`. Keeping the test base the same shape means a path
+      // built here is a path that works against the real server.
+      env: { VITE_API_URL: "http://localhost/v1/api" },
       environmentOptions: { jsdom: { url: "http://localhost/" } },
       include: ["src/**/*.{test,spec}.{ts,tsx}"],
       // Playwright specs live in e2e/ and are not run by Vitest.

@@ -63,7 +63,7 @@ describe("login submission", () => {
 
   it("honours the redirect param after signing in", async () => {
     const { user, router } = await renderRoute("/login?redirect=%2Fsettings")
-    const { email, password } = TEST_CREDENTIALS[ROLES.PROFICIENT]
+    const { email, password } = TEST_CREDENTIALS[ROLES.STAFF]
     await fillAndSubmit(user, email, password)
 
     await waitFor(() => expect(currentPath(router)).toBe("/settings"))
@@ -78,14 +78,33 @@ describe("login submission", () => {
     const { user, router } = await renderRoute(
       "/login?redirect=https%3A%2F%2Fevil.example",
     )
-    const { email, password } = TEST_CREDENTIALS[ROLES.PROFICIENT]
+    const { email, password } = TEST_CREDENTIALS[ROLES.STAFF]
     await fillAndSubmit(user, email, password)
 
     await waitFor(() => expect(currentPath(router)).toBe("/dashboard"))
   })
 
+  /**
+   * `POST /auth/signin` authenticates any active account, the customer and
+   * professional app roles included. Valid credentials are therefore not
+   * enough — the role has to be one the dashboard serves.
+   */
+  it("refuses an account whose role has no dashboard access", async () => {
+    const { user, router } = await renderRoute("/login")
+    const { email, password } = TEST_CREDENTIALS[ROLES.CUSTOMER]
+    await fillAndSubmit(user, email, password)
+
+    expect(
+      await screen.findByText(/doesn't have access to the dashboard/i),
+    ).toBeVisible()
+    expect(currentPath(router)).toBe("/login")
+    // No half-established session: nothing was written to the store.
+    expect(useAuthStore.getState().user).toBeNull()
+    expect(useAuthStore.getState().accessToken).toBeNull()
+  })
+
   it("redirects an already-signed-in visitor away from /login", async () => {
-    const { router } = await renderRoute("/login", { as: ROLES.PROFICIENT })
+    const { router } = await renderRoute("/login", { as: ROLES.STAFF })
     expect(currentPath(router)).toBe("/dashboard")
   })
 })
